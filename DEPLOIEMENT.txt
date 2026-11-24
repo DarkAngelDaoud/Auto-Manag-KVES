@@ -1,0 +1,37 @@
+Auto Manag KVES · signé KVES · Déménagement vers une organisation GitHub gratuite
+Pourquoi : une adresse propre (NOM-ORG.github.io) donne à l'application son propre stockage, séparé de Coach-Mass-KVES (darkangeldaoud.github.io).
+Résultat : https://NOM-ORG.github.io/Auto-Manag-KVES/   (NOM-ORG = le nom que tu choisis à l'étape 1)
+Les données de l'ancienne adresse ne suivent pas (choix : repartir vide). Tu crées un nouveau mot de passe sur la nouvelle adresse.
+
+1. CRÉER L'ORGANISATION (gratuit)
+ a) github.com, connecté à ton compte. Bouton « + » en haut à droite, « New organization ».
+ b) Choisis le plan « Free ».
+ c) Nom de l'organisation : lettres, chiffres, tirets, sans espace. Il apparaîtra dans l'adresse (ex. kves-services). S'il est pris, essaie une variante.
+ d) E-mail de contact : le tien. Coche « My personal account ». Termine (Create organization).
+
+2. TRANSFÉRER LE DÉPÔT (conserve l'historique, le plus simple)
+ a) Ouvre ton dépôt Auto-Manag-KVES, onglet Settings, tout en bas « Danger Zone », « Transfer ».
+ b) Nouveau propriétaire : le nom de ton organisation. Retape le nom du dépôt pour confirmer.
+ c) Le dépôt apparaît alors sous NOM-ORG/Auto-Manag-KVES.
+ (Variante sans transfert : crée un nouveau dépôt public Auto-Manag-KVES dans l'organisation, envoie-y le contenu de ce zip, puis supprime l'ancien.)
+
+3. REMPLACER LES FICHIERS (zip V1.2.0 corrigé)
+ Dans le dépôt de l'organisation : Add file, Upload files, glisse le contenu du zip décompressé, Commit.
+ Le fichier .github/workflows/verification.yml de ce zip corrige l'erreur « No event triggers defined in on ».
+
+4. ACTIVER GITHUB PAGES
+ Dépôt, Settings, Pages : Source « Deploy from a branch », Branch main, dossier « / (root) », Save. Attends 1 à 3 minutes.
+ L'adresse affichée est https://NOM-ORG.github.io/Auto-Manag-KVES/
+
+5. PREMIÈRE OUVERTURE
+ a) Ouvre la nouvelle adresse dans le navigateur du téléphone, crée ton mot de passe, note la clé de récupération.
+ b) Supprime l'ancien raccourci de l'écran d'accueil, puis ajoute le nouveau (menu du navigateur, « Ajouter à l'écran d'accueil »).
+ c) Plus, Sauvegarde : fais une première sauvegarde chiffrée.
+
+6. NETTOYAGE DE L'ANCIENNE ADRESSE
+ Après le transfert, l'ancienne adresse https://darkangeldaoud.github.io/Auto-Manag-KVES/ ne répond plus. Rien d'autre à supprimer.
+ Les anciennes données restent dans le navigateur sous l'ancienne adresse, sans gêner la nouvelle. Ne vide pas les « données du site » darkangeldaoud.github.io : cela effacerait aussi Coach-Mass-KVES.
+
+SÉCURITÉ
+- Active la double authentification (2FA) sur ton compte GitHub. Pour l'organisation : Settings de l'organisation, « Authentication security », « Require two-factor authentication ».
+- Garde au moins un propriétaire (toi) : ne retire jamais ton propre accès.

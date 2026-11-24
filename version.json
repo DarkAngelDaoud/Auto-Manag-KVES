@@ -1,0 +1,1 @@
+{"v":"1.2.0","notes":["Dépenses : saisie (date, montant, catégorie, fournisseur, activité, mode de paiement), catégories modifiables, annulation avec trace.","Résultat réel (encaissé moins dépensé) par trimestre et par année, sur l'accueil et dans Dépenses.","Les dépenses ne changent pas le calcul de l'impôt. Tes données existantes ne sont pas modifiées."]}
