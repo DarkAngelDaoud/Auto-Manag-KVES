@@ -16,7 +16,8 @@ T('B écrit normalement une fois à jour',await B.evaluate(async()=>{const s=JSO
 // A est maintenant périmée : refus aussi
 T('A (périmée) refuse à son tour',await A.evaluate(async()=>{try{await persist();return false}catch(e){return e.message==='conflict'}}));
 // service worker : fichiers installés frais
-const C=await b.newContext({viewport:{width:390,height:844}});const P=await C.newPage();await P.goto(BASE+'index.html');await P.waitForFunction(async()=>{const k=await caches.keys();return k.some(x=>x.startsWith('amk-v'))&&(await(await caches.open(k.find(x=>x.startsWith('amk-v')))).keys()).length>=10},null,{timeout:20000}).catch(()=>{});
+const C=await b.newContext({viewport:{width:390,height:844}});const P=await C.newPage();await P.goto(BASE+'index.html');const count=()=>P.evaluate(async()=>{const k=(await caches.keys()).find(x=>x.startsWith('amk-v'));return k?(await(await caches.open(k)).keys()).length:0}).catch(()=>0);
+for(let i=0;i<40&&(await count())<13;i++)await new Promise(r=>setTimeout(r,500));
 T('cache hors ligne installé avec tous les fichiers',await P.evaluate(async()=>{const k=(await caches.keys()).find(x=>x.startsWith('amk-v'));return !!k&&(await(await caches.open(k)).keys()).length>=13}));
 T('sw.js force le rechargement réseau',/cache:'reload'/.test(require('fs').readFileSync(__dirname+'/../sw.js','utf8')));
 // dates d'exemple
