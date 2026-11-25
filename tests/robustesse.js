@@ -18,7 +18,7 @@ T('A (périmée) refuse à son tour',await A.evaluate(async()=>{try{await persis
 // service worker : fichiers installés frais
 const C=await b.newContext({viewport:{width:390,height:844}});const P=await C.newPage();await P.goto(BASE+'index.html');const count=()=>P.evaluate(async()=>{const k=(await caches.keys()).find(x=>x.startsWith('amk-v'));return k?(await(await caches.open(k)).keys()).length:0}).catch(()=>0);
 for(let i=0;i<40&&(await count())<13;i++)await new Promise(r=>setTimeout(r,500));
-T('cache hors ligne installé avec tous les fichiers',await P.evaluate(async()=>{const k=(await caches.keys()).find(x=>x.startsWith('amk-v'));return !!k&&(await(await caches.open(k)).keys()).length>=13}));
+T('cache hors ligne installé avec tous les fichiers',await P.evaluate(async()=>{const k=(await caches.keys()).find(x=>x.startsWith('amk-v'));return !!k&&(await(await caches.open(k)).keys()).length>=15}));
 T('sw.js force le rechargement réseau',/cache:'reload'/.test(require('fs').readFileSync(__dirname+'/../sw.js','utf8')));
 // dates d'exemple
 await A.reload();await A.fill('#upw','Phrase-test-2026!');await A.click('#ugo');await A.waitForSelector('nav');await A.click('nav [data-tab=more]');await A.click('[data-s=demo]');await A.click('#dl');await A.waitForSelector('[data-s=demo]');
