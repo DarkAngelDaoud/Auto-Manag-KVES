@@ -14,7 +14,7 @@ await p.evaluate(()=>{db.activites=[{id:'a1',nom:'Conseil',cat:'services'}];db.c
 // entreprise via l'écran
 await p.click('nav [data-tab=more]');await p.click('[data-s=ent]');await p.fill('#n_ice','123');await p.click('#sv');T('ICE invalide refusé',await p.isVisible('#err'));
 await p.fill('#n_ice','001122334455667');await p.fill('#n_adresse','Casablanca');await p.click('#sv');await p.waitForSelector('[data-s=enc]');
-const mk=async(desc,q,pu)=>{await p.click('nav [data-tab=inv]');await p.click('#fa');await p.fill('[data-l=d]',desc);await p.fill('[data-l=q]',q);await p.fill('[data-l=p]',pu);await p.click('#sv')};
+const mk=async(desc,q,pu)=>{await p.click('nav [data-tab=inv]');await p.click('#fa');await p.fill('[data-l=d]',desc);await p.fill('[data-l=q]',q);await p.fill('[data-l=p]',pu);await p.click('#sv');await p.waitForSelector('#em');await p.click('#em');await p.waitForSelector('#fp')};
 await mk('Conseil informatique','2','1500');await p.waitForSelector('.invoice');
 const t1=await p.textContent('.invoice');
 T('facture 1 numérotée AAAA-001 avec ICE, TVA, client',t1.includes(Y+'-001')&&t1.includes('001122334455667')&&t1.includes('TVA non applicable')&&t1.includes('Alpha')&&t1.replace(/\s/g,'').includes('3000,00DH'));
@@ -41,9 +41,27 @@ T('annulée gardée, numéro 003 sans réutilisation',nums.includes(Y+'-001:annu
 // instantané : modifier l'entreprise ne change pas une facture émise
 await p.evaluate(()=>{db.entreprise.nom='Autre nom'});await p.click('nav [data-tab=inv]');await p.click('li[data-f]:last-child');await p.waitForSelector('.invoice');
 T('facture émise garde les infos de son jour',(await p.textContent('.invoice')).includes('KVES Services'));
+// V1.4 : total en lettres
+const L=await p.evaluate(()=>[1,2100,100,8000,8100,9100,7100,10000,20000,20100,100000,100100,200000,123457,8000000,8100000,100000000,250000050,99999999,5].map(c=>lettres(c)));
+const exp=['un dirham','vingt et un dirhams','un dirham','quatre-vingts dirhams','quatre-vingt-un dirhams','quatre-vingt-onze dirhams','soixante et onze dirhams','cent dirhams','deux cents dirhams','deux cent un dirhams','mille dirhams','mille un dirhams','deux mille dirhams','mille deux cent trente-quatre dirhams et cinquante-sept centimes','quatre-vingt mille dirhams','quatre-vingt-un mille dirhams','un million de dirhams','deux millions cinq cent mille dirhams et cinquante centimes','neuf cent quatre-vingt-dix-neuf mille neuf cent quatre-vingt-dix-neuf dirhams et quatre-vingt-dix-neuf centimes','cinq centimes'];
+exp[0]='un centime';exp[1]='vingt et un dirhams';exp[2]='un dirham';
+const bad=exp.map((e,i)=>L[i]===e?null:i+': '+L[i]+' ≠ '+e).filter(Boolean);T('total en lettres (20 cas : 21, 71, 80, 81, 91, 200, 1001, millions, centimes…)',bad.length===0);if(bad.length)console.log(bad);
+await p.click('nav [data-tab=inv]');await p.click('[data-f]');await p.waitForSelector('.invoice');T('facture affiche « Arrêtée la présente facture »',(await p.textContent('.invoice')).includes('Arrêtée la présente facture à la somme de'));
+// aperçu : aucun numéro consommé tant qu'on n'émet pas
+const n0=await p.evaluate(()=>db.documents.length);
+await p.click('nav [data-tab=inv]');await p.click('#fa');await p.fill('[data-l=d]','Test aperçu');await p.fill('[data-l=p]','100');await p.selectOption('[data-k=ech]','30');await p.click('#sv');await p.waitForSelector('#em');
+T('aperçu : BROUILLON affiché, aucune facture créée',(await p.textContent('.invoice')).includes('BROUILLON')&&await p.evaluate(()=>db.documents.length)===n0);
+await p.click('#bk');await p.waitForSelector('#sv');T('retour modifiable : saisie conservée',(await p.inputValue('[data-l=d]'))==='Test aperçu');
+await p.click('#sv');await p.waitForSelector('#em');await p.click('#em');await p.waitForSelector('#fp');
+const ft=await p.evaluate(()=>{const f=facSorted()[0];return{n:f.numero,e:f.echeance,d:f.date}});
+T('émission : numéro suivant (004) et échéance +30 jours',ft.n.endsWith('-004')&&ft.e===await p.evaluate(d=>addDays(d,30),ft.d));
+// ICE obligatoire
+await p.evaluate(()=>{db.entreprise.ice=''});await p.click('nav [data-tab=inv]');await p.click('#fa');await p.fill('[data-l=d]','X');await p.fill('[data-l=p]','10');await p.click('#sv');
+T('ICE manquant : émission bloquée',(await p.textContent('#err')).includes('ICE'));
+await p.evaluate(()=>{db.entreprise.ice='001122334455667';route.fd=null});
 // persistance + accueil
 await p.reload();await p.fill('#upw','motdepasse1');await p.click('#ugo');await p.waitForSelector('nav');
-T('factures persistantes',await p.evaluate(()=>db.documents.length===3));
+T('factures persistantes',await p.evaluate(()=>db.documents.length===4));
 T('accueil : factures à encaisser',(await p.textContent('body')).includes('Factures à encaisser'));
 T('aucune erreur JS/CSP',errs.length===0);if(errs.length)console.log(errs);
 console.log(ok+' OK, '+ko+' échecs');await b.close();process.exit(ko?1:0)})();
