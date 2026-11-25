@@ -1,6 +1,7 @@
 Auto Manag KVES · signé KVES · historique des versions
 (Procédure : une modification par version. Mettre à jour le numéro dans donnees.js, sw.js, version.json et index.html, ajouter une ligne ici, puis déposer les fichiers dans le dépôt.)
 
+V1.4.0  Factures : aperçu avant émission, total en lettres, échéance de paiement, ICE obligatoire.
 V1.3.0  Déclarations (à déclarer, déclaré, payé), rappels liés au statut, récapitulatif trimestriel PDF, exports CSV et JSON.
 V1.2.1  Robustesse : verrou entre fenêtres (aucun écrasement), téléchargement frais des fichiers à l'installation, dates d'exemple corrigées.
 V1.2.0  Dépenses : saisie, catégories modifiables, annulation tracée, résultat réel (encaissé moins dépensé).
