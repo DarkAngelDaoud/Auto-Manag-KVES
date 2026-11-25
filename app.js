@@ -12,7 +12,10 @@ const defaultDb=()=>({v:2,params:JSON.parse(JSON.stringify(DONNEES.params)),
  activites:[],clients:[],taches:[],documents:[],entreprise:{nom:'',adresse:'',ice:'',idae:'',tel:'',mail:'',iban:'',tva:t('fac.tva.def'),cond:t('fac.cond.def')},encaissements:[],depenses:[],catDep:['mat','log','trans','tel','cot','four','form','autre'].map(k=>({id:k,nom:t('dep.c.'+k)})),declarations:[],journal:[{d:nowIso(),e:t('log.create')}],lastBackup:null});
 function norm(d){const D=defaultDb();d.v=2;for(const k of Object.keys(D))if(d[k]===undefined)d[k]=D[k];for(const k of Object.keys(D.params))if(d.params[k]===undefined)d.params[k]=D.params[k];return d}
 const log=e=>db.journal.push({d:nowIso(),e});
-async function persist(){vault.data=await seal(dek,enc.encode(JSON.stringify(db)));vault.updated=nowIso();const cur=await kvGet('vault');if(cur)await kvSet('vault.bak',cur);await kvSet('vault',JSON.stringify(vault))}
+async function persist(){const run=async()=>{const cur=await kvGet('vault');if(cur){let u;try{u=JSON.parse(cur).updated}catch{}if(u!==vault.updated){viewConflict();throw new Error('conflict')}}   // une autre fenêtre a écrit entre-temps : on n'écrase jamais
+ vault.data=await seal(dek,enc.encode(JSON.stringify(db)));vault.updated=nowIso();if(cur)await kvSet('vault.bak',cur);await kvSet('vault',JSON.stringify(vault))};
+ return navigator.locks?navigator.locks.request('amk-vault',run):run()}
+addEventListener('unhandledrejection',e=>{if(e.reason&&e.reason.message==='conflict')e.preventDefault()});
 async function setup(pw){if(await getVault())throw new Error('exists');const raw=crypto.getRandomValues(new Uint8Array(32)),rk=newRk();vault={v:1,app:'KVES',pw:await wrap(pw,PW_ITER,raw),rk:await wrap(normRk(rk),RK_ITER,raw)};dek=await importDek(raw);db=defaultDb();await persist();return rk}
 async function load(v,raw){vault=v;dek=await importDek(raw);db=norm(JSON.parse(dec.decode(await open(dek,v.data))));}
 async function unlock(pw){const v=JSON.parse(await getVault());await load(v,await unwrap(pw,v.pw))}
@@ -76,6 +79,7 @@ const backBtn=(label,fn)=>`<button class="link" id="bk" style="justify-content:f
 const wireBack=fn=>{$('#bk').onclick=fn};
 
 async function boot(){applyTheme();navigator.storage&&navigator.storage.persist&&navigator.storage.persist();let v=null;try{v=await getVault()}catch{return viewStorageError()}if(v)return viewLocked();let bak=null;try{bak=await kvGet('vault.bak')}catch{}bak?viewRestoreBak(bak):viewSetup()}
+function viewConflict(){clearTimeout(lockTimer);dek=null;db=null;vault=null;show(`<main style="gap:16px">${bigBrand()}<div class="card"><b>${t('cf2.title')}</b><p>${t('cf2.text')}</p><button id="cfreload">${t('cf2.btn')}</button></div></main>`);$('#cfreload').onclick=boot}
 function viewStorageError(){show(`<main style="gap:16px">${bigBrand()}<div class="card"><b>${t('se.title')}</b><p>${t('se.text')}</p><button id="retry">${t('upd.retry')}</button></div></main>`);$('#retry').onclick=boot}
 function viewRestoreBak(bak){show(`<main style="gap:16px">${bigBrand()}<div class="card"><b>${t('rb.title')}</b><p>${t('rb.text')}</p><button id="rbok">${t('rb.yes')}</button><button class="sec" id="rbno">${t('rb.no')}</button></div></main>`);$('#rbok').onclick=async()=>{await kvSet('vault',bak);boot()};$('#rbno').onclick=viewSetup}
 function viewSetup(){show(`<main style="gap:16px">${bigBrand()}<p class="mute">${t('intro')}</p>
@@ -315,7 +319,7 @@ sav(m){const last=db.lastBackup?new Date(db.lastBackup).toLocaleString(t('locale
 demo(m){const has=db.clients.some(c=>c.demo)||db.activites.some(a=>a.demo);
  m.innerHTML=`${backBtn(t('back'))}<h1>${t('dm.title')}</h1><div class="card"><p>${t('dm.t')}</p><span class="chip ${has?'':'gray'}" style="align-self:flex-start">${has?t('dm.has'):t('dm.none')}</span>${has?'':`<button id="dl">${t('dm.load')}</button>`}${has?`<button class="danger" id="dc">${t('dm.clear')}</button>`:''}</div>`;wireBack(toPlus);
  if(!has)$('#dl').onclick=async()=>{const a={id:uid(),nom:t('dm.act'),cat:'services',ajoutee:nowIso(),archive:null,demo:1};db.activites.push(a);const Y=yr();
-  [['Société Alpha',66200,[[1,20000],[3,18200],[6,28000]]],['Agence Beta',38900,[[2,15900],[5,23000]]],['Cabinet Gamma',12400,[[4,12400]]],['Atelier Delta',4800,[[7,4800]]],['Boutique Epsilon',0,[]]].forEach(([nom,,e])=>{const c={id:uid(),nom,cree:nowIso(),archive:null,demo:1};db.clients.push(c);e.forEach(([mo,v])=>db.encaissements.push({id:uid(),clientId:c.id,activiteId:a.id,date:new Date(Y,Math.min(mo,new Date().getMonth()),10).toISOString(),montant:v*100,demo:1}))});
+  [['Société Alpha',66200,[[1,20000],[3,18200],[6,28000]]],['Agence Beta',38900,[[2,15900],[5,23000]]],['Cabinet Gamma',12400,[[4,12400]]],['Atelier Delta',4800,[[7,4800]]],['Boutique Epsilon',0,[]]].forEach(([nom,,e])=>{const c={id:uid(),nom,cree:nowIso(),archive:null,demo:1};db.clients.push(c);e.forEach(([mo,v])=>db.encaissements.push({id:uid(),clientId:c.id,activiteId:a.id,date:Y+'-'+String(Math.min(mo,new Date().getMonth())+1).padStart(2,'0')+'-10',montant:v*100,demo:1}))});
   log(t('log.dm.load'));await persist();nav('more')};
  if(has)$('#dc').onclick=()=>confirmBox(m,t('dm.conf'),t('dm.yes'),async()=>{for(const k of['clients','activites','encaissements','taches'])db[k]=db[k].filter(x=>!x.demo);log(t('log.dm.clear'));await persist();nav('more')})}
 };

@@ -1,6 +1,7 @@
 Auto Manag KVES · signé KVES · historique des versions
 (Procédure : une modification par version. Mettre à jour le numéro dans donnees.js, sw.js, version.json et index.html, ajouter une ligne ici, puis déposer les fichiers dans le dépôt.)
 
+V1.2.1  Robustesse : verrou entre fenêtres (aucun écrasement), téléchargement frais des fichiers à l'installation, dates d'exemple corrigées.
 V1.2.0  Dépenses : saisie, catégories modifiables, annulation tracée, résultat réel (encaissé moins dépensé).
 V1.1.0  Factures : numérotation automatique AAAA-001, lignes de détail, impression PDF, écran Mon entreprise, encaissement lié à la facture, annulation tracée.
 V1.0.0  Première version : coffre chiffré (mot de passe + clé de récupération), clients, activités, encaissements avec annulation tracée, impôt par trimestre et par catégorie, échéances, règles légales modifiables, sauvegarde chiffrée, thème clair/sombre, mises à jour en deux temps. Stockage et caches propres à cette application (indépendants de l'ancienne).
