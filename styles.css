@@ -17,7 +17,7 @@ button,.btn{min-height:48px;border:0;border-radius:10px;background:var(--pri);co
 button.sec{background:var(--card);color:var(--text);border:1px solid var(--field)}button.link{background:none;color:var(--pri);min-height:44px;padding:0}
 button.danger{background:var(--bad);color:#fff}button:disabled{opacity:.45;cursor:not-allowed}
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:44px;border-top:1px solid var(--line);font-size:14px}
-.row:first-of-type{border-top:0}.row input{max-width:130px;min-height:40px;text-align:right}
+.row:first-of-type{border-top:0}.row input{max-width:130px;min-height:40px;text-align:end}
 .key{font:600 18px/1.6 ui-monospace,Consolas,monospace;letter-spacing:.06em;word-break:break-all;text-align:center;padding:12px;border:2px dashed var(--field);border-radius:12px}
 .seg{display:flex;border:1px solid var(--field);border-radius:12px;overflow:hidden}.seg button{flex:1;border-radius:0;background:var(--card);color:var(--text);font-weight:500}.seg button[aria-pressed=true]{background:var(--pri);color:var(--onpri);font-weight:600}
 nav{position:sticky;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
@@ -31,11 +31,11 @@ nav button svg{box-sizing:content-box;padding:4px 12px;border-radius:999px;width
 .chip{display:inline-flex;align-items:center;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;background:var(--ok-bg);color:var(--ok);white-space:nowrap}.chip.warn{background:var(--warn-bg);color:var(--warn)}
 .iconbtn{min-height:44px;min-width:44px;padding:0;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:12px}
 .steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}.steps li{display:flex;align-items:center;gap:10px;font-size:14px}.steps i{flex:none;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;font-weight:700;border:2px solid var(--field);color:var(--mute)}.steps li.done i{background:var(--acc);border-color:var(--acc);color:#fff}
-.pwwrap{position:relative;display:block}.pwwrap input{padding-right:52px}.eye{position:absolute;right:2px;top:2px;min-height:44px;min-width:44px;padding:0;background:none;border:0;color:var(--mute);border-radius:10px}
+.pwwrap{position:relative;display:block}.pwwrap input{padding-inline-end:52px}.eye{position:absolute;inset-inline-end:2px;top:2px;min-height:44px;min-width:44px;padding:0;background:none;border:0;color:var(--mute);border-radius:10px}
 #upd{position:fixed;left:12px;right:12px;bottom:84px;z-index:9;max-height:70vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 8px 28px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:10px}#upd ul{margin:0;padding-left:20px}#upd .row2{display:flex;flex-direction:column;gap:8px}
 @media print{nav,button,.noprint{display:none!important}}
 .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}.warnc .bar i{background:#B45309}.over .bar i{background:var(--bad)}
-.item{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:14px;min-height:0;width:100%;font-weight:400;align-items:stretch;justify-content:flex-start}
+.item{display:flex;flex-direction:column;gap:8px;text-align:start;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:14px;min-height:0;width:100%;font-weight:400;align-items:stretch;justify-content:flex-start}
 .item.warnc{background:var(--warn-bg);border-color:#F0D9A8}.item.over{border-color:var(--bad)}
 .l1{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}.l2{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mute)}
 .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}.filters button{flex:none;min-height:44px;border-radius:22px;background:var(--card);color:var(--text);border:1px solid var(--field);font-weight:500}.filters button[aria-pressed=true]{background:var(--pri);color:var(--onpri);border-color:var(--pri);font-weight:600}
@@ -54,3 +54,5 @@ nav button svg{box-sizing:content-box;padding:4px 12px;border-radius:999px;width
 @media print{html,body{background:#fff!important;color:#000!important}#m{padding:0!important}.invoice{background:#fff!important;color:#000!important;border:0!important;box-shadow:none!important}.invoice .mute{color:#444!important}.inv-t th,.inv-t td,.inv-c{border-color:#999!important}}
 
 .pwm{display:flex;align-items:center;gap:8px;font-size:12px;margin-top:-4px}.pwt{flex:1;height:6px;border-radius:4px;background:var(--line);overflow:hidden}.pwt i{display:block;height:100%;transition:width .2s;background:#C0392B}.pwm[data-l=mid] i{background:#E0A100}.pwm[data-l=good] i{background:#18B169}.pwm span{min-width:96px}
+
+.langbar{margin-top:6px}.langbar button{min-height:40px;padding-inline:14px}input[type=text],input[type=search],textarea{unicode-bidi:plaintext}[dir=rtl] .pwm span{text-align:start}

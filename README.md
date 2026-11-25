@@ -16,7 +16,7 @@ Suivre en un seul endroit son activité d'auto-entrepreneur : plafond annuel, é
 3. Exporte régulièrement une sauvegarde (Plus, Sauvegarde) et garde-la hors du téléphone.
 
 ## Version
-V1.4.1 : mot de passe renforcé. V1.4.0 : factures complétées (aperçu, total en lettres, échéance). V1.3.0 : déclarations et exports. V1.2.1 : robustesse (verrou entre fenêtres, mises à jour fiables). V1.2.0 : dépenses et résultat réel. V1.1.0 : factures (numérotation automatique, impression PDF, encaissement lié). V1.0.0 : première version (repartie de zéro à partir de la V1.5.0 de l'ancien dépôt) : coffre chiffré, clients, activités, encaissements, impôt par trimestre, échéances, sauvegarde, thèmes, mises à jour en deux temps.
+V1.5.0 : langues français, anglais, arabe. V1.4.1 : mot de passe renforcé. V1.4.0 : factures complétées (aperçu, total en lettres, échéance). V1.3.0 : déclarations et exports. V1.2.1 : robustesse (verrou entre fenêtres, mises à jour fiables). V1.2.0 : dépenses et résultat réel. V1.1.0 : factures (numérotation automatique, impression PDF, encaissement lié). V1.0.0 : première version (repartie de zéro à partir de la V1.5.0 de l'ancien dépôt) : coffre chiffré, clients, activités, encaissements, impôt par trimestre, échéances, sauvegarde, thèmes, mises à jour en deux temps.
 
 Les montants et dates affichés sont indicatifs : à vérifier sur rn.ae.gov.ma.
 

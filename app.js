@@ -9,7 +9,7 @@ const nowIso=()=>new Date().toISOString();
 
 /* ---- Données et règles légales (modifiables). Montants des opérations en CENTIMES (entiers) ; règles légales en DH. ---- */
 const defaultDb=()=>({v:2,params:JSON.parse(JSON.stringify(DONNEES.params)),
- activites:[],clients:[],taches:[],documents:[],entreprise:{nom:'',adresse:'',ice:'',idae:'',tel:'',mail:'',iban:'',tva:t('fac.tva.def'),cond:t('fac.cond.def')},encaissements:[],depenses:[],catDep:['mat','log','trans','tel','cot','four','form','autre'].map(k=>({id:k,nom:t('dep.c.'+k)})),declarations:[],journal:[{d:nowIso(),e:t('log.create')}],lastBackup:null});
+ activites:[],clients:[],taches:[],documents:[],entreprise:{nom:'',adresse:'',ice:'',idae:'',tel:'',mail:'',iban:'',tva:tf('fac.tva.def'),cond:tf('fac.cond.def')},encaissements:[],depenses:[],catDep:['mat','log','trans','tel','cot','four','form','autre'].map(k=>({id:k,nom:t('dep.c.'+k)})),declarations:[],journal:[{d:nowIso(),e:t('log.create')}],lastBackup:null});
 function norm(d){const D=defaultDb();d.v=2;for(const k of Object.keys(D))if(d[k]===undefined)d[k]=D[k];for(const k of Object.keys(D.params))if(d.params[k]===undefined)d.params[k]=D.params[k];return d}
 const log=e=>db.journal.push({d:nowIso(),e});
 async function persist(){const run=async()=>{const cur=await kvGet('vault');if(cur){let u;try{u=JSON.parse(cur).updated}catch{}if(u!==vault.updated){viewConflict();throw new Error('conflict')}}   // une autre fenêtre a écrit entre-temps : on n'écrase jamais
@@ -26,18 +26,25 @@ function arm(){clearTimeout(lockTimer);if(db)lockTimer=setTimeout(lock,AUTOLOCK_
 ['pointerdown','keydown','scroll'].forEach(e=>addEventListener(e,arm,{passive:true}));
 
 /* ---- Calculs (échéances, plafonds, clients) ---- */
-const MOIS=t('m');
+let MOIS=t('m');
 const fmt=d=>d.getDate()+' '+MOIS[d.getMonth()]+' '+d.getFullYear();
-const nf=new Intl.NumberFormat(t('locale'));
+let nf=new Intl.NumberFormat(t('locale'));
 const dh=c=>nf.format(Math.round(c/100))+' DH';   // centimes -> DH
 const dhp=d=>nf.format(Math.round(d))+' DH';       // DH (règles)
 const yr=()=>new Date().getFullYear();
 const pd=s=>{const m=/^(\d{4})-(\d\d)-(\d\d)/.exec(s);return m?new Date(+m[1],+m[2]-1,+m[3]):new Date(s)};   // date locale (évite les décalages de fuseau)
 const yearOf=e=>pd(e.date).getFullYear(),qOf=d=>Math.floor(pd(d).getMonth()/3)+1;
 const localIso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-const nf2=new Intl.NumberFormat(t('locale'),{minimumFractionDigits:2,maximumFractionDigits:2});
-const dhx=c=>nf2.format(c/100)+' DH';   // centimes -> DH avec décimales
-function parseCts(s){s=String(s).replace(/[\s\u00a0\u202f]/g,'').replace(',','.');if(!/^\d{1,8}(\.\d{1,2})?$/.test(s))return null;const[a,b='']=s.split('.');const c=parseInt(a,10)*100+parseInt((b+'00').slice(0,2),10);return c>0?c:null}
+let nf2=new Intl.NumberFormat(t('locale'),{minimumFractionDigits:2,maximumFractionDigits:2});
+const nfFr2=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}),dhxFr=c=>nfFr2.format(c/100)+' DH',fmtFr=d=>d.getDate()+' '+LANGS.fr.m[d.getMonth()]+' '+d.getFullYear();   // documents : toujours en français
+function applyLang(){document.documentElement.lang=LANG;document.documentElement.dir=LANG==='ar'?'rtl':'ltr';MOIS=t('m');nf=new Intl.NumberFormat(t('locale'));nf2=new Intl.NumberFormat(t('locale'),{minimumFractionDigits:2,maximumFractionDigits:2})}
+function setLang(l){if(!LANGS[l])return;LANG=l;try{localStorage.setItem('amk.lang',l)}catch{}applyLang()}
+const langBar=()=>`<div class="seg langbar" dir="ltr">${[['fr','Français'],['en','English'],['ar','العربية']].map(([k,n])=>`<button data-lang="${k}" aria-pressed="${LANG===k}" lang="${k}">${n}</button>`).join('')}</div>`;
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-lang]');if(!b)return;setLang(b.dataset.lang);if(typeof db!=='undefined'&&db)viewApp();else location.reload()});
+applyLang();
+const dhx=c=>LANG==='ar'?'\u2066'+nf2.format(c/100)+' DH\u2069':nf2.format(c/100)+' DH';   // centimes -> DH avec décimales
+const normNum=s=>String(s).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/٫/g,'.').replace(/٬/g,'');
+function parseCts(s){s=normNum(s).replace(/[\s\u00a0\u202f]/g,'').replace(',','.');if(!/^\d{1,8}(\.\d{1,2})?$/.test(s))return null;const[a,b='']=s.split('.');const c=parseInt(a,10)*100+parseInt((b+'00').slice(0,2),10);return c>0?c:null}
 const encPeriode=(y,q)=>db.encaissements.filter(e=>!e.annule&&yearOf(e)===y&&(!q||qOf(e.date)===q));
 function taxe(list){const ca={services:0,commerce:0},p=db.params;list.forEach(e=>{ca[catOf(e)]+=e.montant});const imp={services:Math.round(ca.services*p.taux/100),commerce:Math.round(ca.commerce*p.tauxCommerce/100)};return{ca,imp,caTotal:ca.services+ca.commerce,total:imp.services+imp.commerce}}
 const cn=id=>(db.clients.find(c=>c.id===id)||{}).nom,an=id=>(db.activites.find(a=>a.id===id)||{}).nom;
@@ -59,7 +66,7 @@ function clState(c){const s=encClient(c.id),S=db.params.seuilClient*100,pct=S?s/
 const paye=f=>db.encaissements.filter(e=>!e.annule&&e.factureId===f.id).reduce((s,e)=>s+e.montant,0);
 const reste=f=>f.statut==='annulee'?0:Math.max(0,f.total-paye(f));
 const unpaid=(key,id)=>db.documents.filter(d=>d[key]===id&&d.type==='facture'&&d.statut!=='annulee'&&reste(d)>0);
-const parseQm=s=>{s=String(s).replace(/[\s  ]/g,'').replace(',','.');if(!/^\d{1,6}(\.\d{1,3})?$/.test(s))return null;const q=Math.round(parseFloat(s)*1000);return q>0?q:null};
+const parseQm=s=>{s=normNum(s).replace(/[\s  ]/g,'').replace(',','.');if(!/^\d{1,6}(\.\d{1,3})?$/.test(s))return null;const q=Math.round(parseFloat(s)*1000);return q>0?q:null};
 const lineCts=(qm,p)=>Math.round(qm*p/1000);
 const qShow=qm=>String(qm/1000).replace('.',',');
 const addDays=(iso,n)=>{const d=pd(iso);d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -77,7 +84,7 @@ const task=txt=>db.taches.push({id:uid(),texte:txt,date:nowIso(),fait:false});
 /* ---- Interface ---- */
 const logo=n=>`<img class="mk" src="logo-kves-mark.png" height="${n}" alt="Logo KVES">`;
 const brand=n=>`<div class="brand">${logo(n)}<div><b>Auto Manag</b><small>KVES</small></div></div>`;
-const bigBrand=()=>`<div class="logobox" style="margin-top:8px"><img src="logo-kves.png" alt="KVES Services & Tech"></div><div><h1>Auto Manag KVES</h1><small class="mute" style="letter-spacing:.12em;font-weight:600">${t('tagline')}</small></div>`;
+const bigBrand=()=>`<div class="logobox" style="margin-top:8px"><img src="logo-kves.png" alt="KVES Services & Tech"></div><div><h1>Auto Manag KVES</h1><small class="mute" style="letter-spacing:.12em;font-weight:600">${t('tagline')}</small></div>${langBar()}`;
 function ring(p,al){const r=40,c=2*Math.PI*r,a=(al/100*360-90)*Math.PI/180,P=Math.min(p,100);return`<svg width="104" height="104" viewBox="0 0 104 104" role="img" aria-label="${t('hero.aria',Math.round(p))}" style="flex:none"><circle cx="52" cy="52" r="${r}" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="10"/>${P>0?`<circle cx="52" cy="52" r="${r}" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c*P/100} ${c}" transform="rotate(-90 52 52)"/>`:''}<line x1="${52+33*Math.cos(a)}" y1="${52+33*Math.sin(a)}" x2="${52+47*Math.cos(a)}" y2="${52+47*Math.sin(a)}" stroke="#18B169" stroke-width="4" stroke-linecap="round"/><text x="52" y="58" text-anchor="middle" fill="#fff" font-size="20" font-weight="700">${Math.round(p)} %</text></svg>`}
 const route={tab:'home',sub:null,arg:null,f:'all',q:''};
 const ic={home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',clients:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/>',inv:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',ech:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>'};
@@ -165,8 +172,8 @@ function facDraft(F){const d=F.date,today=localIso(),e=db.entreprise;if(!e.nom)r
 async function facEmit(dr){const same=db.documents.filter(x=>x.type==='facture'&&x.annee===dr.annee),last=same.reduce((s,x)=>x.date>s?x.date:s,'');if(dr.date<last)return t('fac.e.chrono',fmt(pd(last)));
  const seq=1+same.reduce((s,x)=>Math.max(s,x.seq),0),f={...dr,id:uid(),seq,numero:dr.annee+'-'+String(seq).padStart(3,'0'),cree:nowIso()};
  db.documents.push(f);log(t('log.fac.add',f.numero));await persist();route.fd=null;route.fdraft=null;nav('inv','fiche',f.id);return null}
-function invBody(f,draft){const e=f.ent,c=f.cl,ln=(k,v)=>v?`<div>${t(k)} : ${esc(v)}</div>`:'',ann=f.statut==='annulee';
- return `<article class="card invoice"><div class="inv-h"><div><b>${esc(e.nom)}</b><div>${esc(e.adresse)}</div>${ln('fac.ice',e.ice)}${ln('fac.idae',e.idae)}${ln('fac.tel',e.tel)}${ln('fac.mail',e.mail)}</div><div class="inv-n"><b class="inv-t1">${t(draft?'fac.draft':'fac.title')}</b><div>${draft?t('fac.draft.n'):t('fac.no',esc(f.numero))}</div><div>${fmt(pd(f.date))}</div>${f.echeance===undefined?'':`<div>${t('fac.ech.l')} : ${f.echeance?fmt(pd(f.echeance)):t('fac.ech.0')}</div>`}</div></div>
+function invBody(f,draft){const t=tf,dhx=dhxFr,fmt=fmtFr;const e=f.ent,c=f.cl,ln=(k,v)=>v?`<div>${t(k)} : ${esc(v)}</div>`:'',ann=f.statut==='annulee';
+ return `<article class="card invoice" dir="ltr" lang="fr"><div class="inv-h"><div><b>${esc(e.nom)}</b><div>${esc(e.adresse)}</div>${ln('fac.ice',e.ice)}${ln('fac.idae',e.idae)}${ln('fac.tel',e.tel)}${ln('fac.mail',e.mail)}</div><div class="inv-n"><b class="inv-t1">${t(draft?'fac.draft':'fac.title')}</b><div>${draft?t('fac.draft.n'):t('fac.no',esc(f.numero))}</div><div>${fmt(pd(f.date))}</div>${f.echeance===undefined?'':`<div>${t('fac.ech.l')} : ${f.echeance?fmt(pd(f.echeance)):t('fac.ech.0')}</div>`}</div></div>
 <div class="inv-c"><span class="mute">${t('fac.to')}</span><b>${esc(c.nom)}</b>${c.adr?`<div>${esc(c.adr)}</div>`:''}${ln('fac.ice',c.ice)}</div>
 <table class="inv-t"><thead><tr><th>${t('fac.desc')}</th><th>${t('fac.qty.s')}</th><th>${t('fac.pu.s')}</th><th>${t('fac.tl')}</th></tr></thead><tbody>${f.lignes.map(x=>`<tr><td>${esc(x.d)}</td><td class="num">${qShow(x.qm)}</td><td class="num">${dhx(x.p)}</td><td class="num">${dhx(lineCts(x.qm,x.p))}</td></tr>`).join('')}</tbody></table>
 <div class="row"><b>${t('fac.net')}</b><b>${dhx(f.total)}</b></div><p>${t('fac.words',esc(lettres(f.total)))}</p>
@@ -194,7 +201,7 @@ function home(m){const n=nextDeadline(),p=db.params,ca=caCat('services'),pct=ca/
 <div class="hero">${ring(pct,p.alerte)}<div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span class="mute">${t('hero.cap')}</span><span class="big">${dh(ca)}</span><span class="mute">${t('hero.sur',dhp(p.plafond),dhp(Math.max(p.plafond-ca/100,0)))}</span><span class="mute">${t('hero.alert',p.alerte,dhp(p.plafond*p.alerte/100))}</span></div></div>
 <button id="qe">${t('enc.quick')}</button>
 ${hasC?`<div class="card"><div class="l1"><span>${t('hero.cap2')}</span><b>${dh(caC)}</b></div>${bar(pctC)}<div class="l2"><span>${t('hero.sur',dhp(p.plafondCommerce),dhp(Math.max(p.plafondCommerce-caC/100,0)))}</span><span>${Math.round(pctC)} %</span></div></div>`:''}
-<div class="card"><div class="top"><span class="mute">${t('next')}</span><span class="chip ${n.actif?'warn':''}">${chip}</span></div><b style="font-size:18px">${t('decl',n.t,n.annee)}</b><span>${fmt(n.date)} · ${n.l}</span><span class="mute">${n.actif?t('alert.on'):t('alert.at',fmt(n.alerte))} ${t('alert.zero',p.penalite)}</span></div>
+<div class="card"><div class="top"><span class="mute">${t('next')}</span><span class="chip ${n.actif?'warn':''}">${chip}</span></div><b style="font-size:18px">${t('decl',n.t,n.annee)}</b><span>${fmt(n.date)} · ${t('ql.'+n.t)}</span><span class="mute">${n.actif?t('alert.on'):t('alert.at',fmt(n.alerte))} ${t('alert.zero',p.penalite)}</span></div>
 <div class="card"><b>${t('tx.title',n.t,n.annee)}</b><div class="row"><span>${t('tx.ca')}</span><b>${dhx(tx.caTotal)}</b></div><div class="row"><span>${t('tx.tax')}</span><b>${dhx(tx.total)}</b></div>${tx.caTotal?'':`<span class="mute">${t('tx.none')}</span>`}</div>
 ${todoDecl().map(x=>`<div class="note ${x.k==='late'?'bad':''}">${t(x.k==='late'?'dc.late':'dc.topay',x.t,x.annee)}</div>`).join('')}
 ${(()=>{const dp=db.depenses.filter(d=>!d.annule&&yearOf(d)===yr());if(!dp.length)return'';const ca=taxe(encPeriode(yr(),0)).caTotal,ds=dp.reduce((s,d)=>s+d.montant,0);return `<div class="card"><b>${t('dep.res',yr())}</b><div class="row"><span>${t('dep.in')}</span><b>${dhx(ca)}</b></div><div class="row"><span>${t('dep.out')}</span><b>${dhx(ds)}</b></div><div class="row"><b>${t('dep.net')}</b><b>${dhx(ca-ds)}</b></div></div>`})()}
@@ -204,7 +211,7 @@ ${demo?`<div class="note ok">${t('demo.on')}</div>`:''}
 ${open.length?`<div class="card"><b>${t('todo')}</b>${open.slice(0,3).map(x=>`<div class="row"><span>${esc(x.texte)}</span><button class="sec" data-tk="${x.id}" style="min-height:40px">${t('done')}</button></div>`).join('')}${open.length>3?`<span class="mute">${t('more_n',open.length-3)}</span>`:''}</div>`:''}
 <div class="card"><b>${t('steps')}</b><ul class="steps">${[[1,t('st.vault')],[1,t('st.key')],[!!db.lastBackup,t('st.bk')],[actives.length>0,t('st.act')],[db.clients.some(c=>!c.archive),t('st.cl')],[0,t('st.next')]].map(([d,l],i)=>`<li class="${d?'done':''}"><i>${d?'✓':i+1}</i><span>${l}</span></li>`).join('')}</ul></div>`;
  $('#hl').onclick=lock;$('#qe').onclick=()=>{route.ret={tab:'home'};route.pre=null;nav('more','encform')};m.querySelectorAll('[data-tk]').forEach(b=>b.onclick=async()=>{db.taches.find(y=>y.id===b.dataset.tk).fait=true;await persist();viewApp()})}
-function ech(m){const rows=db.params.echeances.map(e=>{const[mm,d]=e.md.split('-').map(Number);return`<div class="row"><span>${e.t} · ${e.l}</span><b>${d} ${MOIS[mm-1]}</b></div>`}).join('');m.innerHTML=`<h1>${t('ech.title')}</h1><p class="mute">${t('ech.sub',db.params.alerteJours)}</p><div class="card">${rows}</div><button id="gd">${t('dc.open')}</button>`;$('#gd').onclick=()=>nav('more','decl')}
+function ech(m){const rows=db.params.echeances.map(e=>{const[mm,d]=e.md.split('-').map(Number);return`<div class="row"><span>${e.t} · ${t('ql.'+e.t)}</span><b>${d} ${MOIS[mm-1]}</b></div>`}).join('');m.innerHTML=`<h1>${t('ech.title')}</h1><p class="mute">${t('ech.sub',db.params.alerteJours)}</p><div class="card">${rows}</div><button id="gd">${t('dc.open')}</button>`;$('#gd').onclick=()=>nav('more','decl')}
 
 /* ---- Clients ---- */
 function clientsView(m){if(route.sub==='form')return clientForm(m);if(route.sub==='fiche')return clientFiche(m);
@@ -258,7 +265,7 @@ const subs={
 decl(m){const Y=route.xy||yr(),ys=[...new Set([yr(),yr()-1,...db.encaissements.map(yearOf),...db.declarations.map(d=>d.annee)])].sort((x,y)=>y-x),today=new Date();
  const card=q=>{const T='T'+q,tx=taxe(encPeriode(Y,q)),r=decl(Y,T),due=dueDate(Y,T),e=db.params.echeances.find(x=>x.t===T),late=!r&&due<today&&tx.caTotal>0,
   chip=!r?`<span class="chip ${late?'bad':'gray'}">${t(late?'dc.s.late':'dc.s.todo')}</span>`:r.statut==='paye'?`<span class="chip">${t('dc.s.paid')}</span>`:`<span class="chip warn">${t('dc.s.decl')}</span>`;
-  return `<div class="card"><div class="top"><b>${T} ${Y} · ${esc(e.l)}</b>${chip}</div><div class="row"><span>${t('dc.due')}</span><span>${fmt(due)}</span></div><div class="row"><span>${t('tx.ca')}</span><b>${dhx(tx.caTotal)}</b></div><div class="row"><span>${t('dc.calc')}</span><b>${dhx(tx.total)}</b></div>
+  return `<div class="card"><div class="top"><b>${T} ${Y} · ${t('ql.'+T)}</b>${chip}</div><div class="row"><span>${t('dc.due')}</span><span>${fmt(due)}</span></div><div class="row"><span>${t('tx.ca')}</span><b>${dhx(tx.caTotal)}</b></div><div class="row"><span>${t('dc.calc')}</span><b>${dhx(tx.total)}</b></div>
 ${r?`<div class="row"><span>${t('dc.declon')}</span><span>${fmt(pd(r.dateDecl))}</span></div>`:''}${r&&r.statut==='paye'?`<div class="row"><span>${t('dc.paidon',fmt(pd(r.datePaie)))}</span><b>${dhx(r.montant)}</b></div>${r.montant!==tx.total?`<span class="mute">${t('dc.diff',dhx(tx.total))}</span>`:''}`:''}${r&&r.ref?`<span class="mute">${esc(r.ref)}</span>`:''}
 ${!r?`<button data-a="declare" data-q="${q}">${t('dc.b.decl')}</button>`:r.statut==='declare'?`<button data-a="paye" data-q="${q}">${t('dc.b.pay')}</button>`:''}<button class="sec" data-a="fiche" data-q="${q}">${t('dc.b.recap')}</button>${r?`<button class="sec" data-a="undo" data-q="${q}">${t('dc.b.undo')}</button>`:''}</div>`};
  m.innerHTML=`${backBtn(t('back'))}<h1>${t('more.decl')}</h1><p class="mute">${t('dc.hint')}</p><div class="filters">${ys.map(y=>`<button data-y="${y}" aria-pressed="${y===Y}">${y}</button>`).join('')}</div>${[1,2,3,4].map(card).join('')}`;
@@ -278,9 +285,9 @@ ${pay?`<label>${t('dc.f.amount')}<input id="x_m" type="text" inputmode="decimal"
   if(!pay){const free=tx.total===0;db.declarations.push({id:uid(),annee:Y,t:T,statut:free?'paye':'declare',auto:free||undefined,dateDecl:d,datePaie:free?d:null,montant:free?0:null,ref,cree:nowIso()})}
   else{if(r.dateDecl&&d<r.dateDecl)return err(t('dc.e.order'));const c=parseCts($('#x_m').value);if(!c)return err(t('enc.e.montant'));Object.assign(r,{statut:'paye',datePaie:d,montant:c,ref:ref||r.ref})}
   log(t(pay?'log.dc.pay':'log.dc.decl',T,Y));await persist();nav('more','decl')}},
-declfiche(m){const a=route.arg||{},Y=a.annee,T=a.t,q=+String(T).slice(1);if(!Y||!T)return nav('more','decl');
- const L=encPeriode(Y,q).sort((x,y)=>pd(x.date)-pd(y.date)),tx=taxe(L),r=decl(Y,T),e=db.entreprise,p=db.params,per=db.params.echeances.find(x=>x.t===T).l;
- m.innerHTML=`<div class="noprint">${backBtn(t('back'))}</div><article class="card invoice"><div class="inv-h"><div><b>${esc(e.nom||'')}</b>${e.ice?`<div>${t('fac.ice')} : ${esc(e.ice)}</div>`:''}${e.idae?`<div>${t('fac.idae')} : ${esc(e.idae)}</div>`:''}</div><div class="inv-n"><b class="inv-t1">${t('dc.recap')}</b><div>${T} ${Y} · ${esc(per)}</div></div></div>
+declfiche(m){const t=tf,dhx=dhxFr,fmt=fmtFr;const a=route.arg||{},Y=a.annee,T=a.t,q=+String(T).slice(1);if(!Y||!T)return nav('more','decl');
+ const L=encPeriode(Y,q).sort((x,y)=>pd(x.date)-pd(y.date)),tx=taxe(L),r=decl(Y,T),e=db.entreprise,p=db.params,per=tf('ql.'+T);
+ m.innerHTML=`<div class="noprint">${backBtn(t('back'))}</div><article class="card invoice" dir="ltr" lang="fr"><div class="inv-h"><div><b>${esc(e.nom||'')}</b>${e.ice?`<div>${t('fac.ice')} : ${esc(e.ice)}</div>`:''}${e.idae?`<div>${t('fac.idae')} : ${esc(e.idae)}</div>`:''}</div><div class="inv-n"><b class="inv-t1">${t('dc.recap')}</b><div>${T} ${Y} · ${esc(per)}</div></div></div>
 <div class="row"><span>${t('enc.catline',t('cat.services'),dhx(tx.ca.services),p.taux)}</span><b>${dhx(tx.imp.services)}</b></div><div class="row"><span>${t('enc.catline',t('cat.commerce'),dhx(tx.ca.commerce),p.tauxCommerce)}</span><b>${dhx(tx.imp.commerce)}</b></div>
 <div class="row"><b>${t('tx.ca')}</b><b>${dhx(tx.caTotal)}</b></div><div class="row"><b>${t('enc.tax')}</b><b>${dhx(tx.total)}</b></div>
 <p>${r?t('dc.declon')+' : '+fmt(pd(r.dateDecl))+(r.statut==='paye'?' · '+t('dc.paidon',fmt(pd(r.datePaie)))+' : '+dhx(r.montant):' · '+t('dc.s.decl')):t('dc.s.todo')}${r&&r.ref?' · '+esc(r.ref):''}</p>
@@ -292,10 +299,10 @@ exp(m){const Y=route.xy||yr(),Q=route.xq||0,ys=[...new Set([yr(),...db.encaissem
 <div class="card"><button id="x1">${t('ex.enc')}</button><button id="x2" class="sec">${t('ex.fac')}</button><button id="x3" class="sec">${t('ex.dep')}</button></div>
 <div class="card"><b>${t('ex.json')}</b><p class="mute">${t('ex.json.w')}</p><button id="x4" class="sec">${t('ex.json.b')}</button></div>`;
  wireBack(toPlus);m.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{route.xy=+b.dataset.y;viewApp()});m.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{route.xq=+b.dataset.q;viewApp()});
- const st=x=>t(x.annule?'enc.cancelled':'ex.valid'),act=id=>an(id)||'',catT=id=>{const c=(db.activites.find(x=>x.id===id)||{}).cat;return c?t('cat.'+c):''};
- $('#x1').onclick=()=>csvFile('encaissements-'+sfx+'.csv',['Date','Client','Activité','Catégorie','Montant (DH)','Mode','Facture','Note','Statut'],db.encaissements.filter(e=>inPer(e.date,Y,Q)).sort((x,y)=>pd(x.date)-pd(y.date)).map(e=>[e.date.slice(0,10),cn(e.clientId)||'',act(e.activiteId),catT(e.activiteId),csvDh(e.montant),t('mode.'+e.mode),(db.documents.find(d=>d.id===e.factureId)||{}).numero||'',e.note||'',st(e)]));
- $('#x2').onclick=()=>csvFile('factures-'+sfx+'.csv',['Numéro','Date','Client','ICE client','Activité','Total (DH)','Encaissé (DH)','Reste (DH)','Statut'],db.documents.filter(d=>d.type==='facture'&&inPer(d.date,Y,Q)).sort((x,y)=>x.annee-y.annee||x.seq-y.seq).map(f=>[f.numero,f.date,f.cl.nom,f.cl.ice,act(f.activiteId),csvDh(f.total),csvDh(paye(f)),csvDh(reste(f)),t(f.statut==='annulee'?'fac.s.annulee':reste(f)===0?'fac.s.payee':'ex.open')]));
- $('#x3').onclick=()=>csvFile('depenses-'+sfx+'.csv',['Date','Catégorie','Fournisseur','Activité','Montant (DH)','Mode','Note','Statut'],db.depenses.filter(d=>inPer(d.date,Y,Q)).sort((x,y)=>pd(x.date)-pd(y.date)).map(d=>[d.date.slice(0,10),(db.catDep.find(c=>c.id===d.cat)||{}).nom||'',d.fournisseur||'',act(d.activiteId),csvDh(d.montant),t('mode.'+d.mode),d.note||'',st(d)]));
+ const st=x=>tf(x.annule?'enc.cancelled':'ex.valid'),act=id=>an(id)||'',catT=id=>{const c=(db.activites.find(x=>x.id===id)||{}).cat;return c?tf('cat.'+c):''};
+ $('#x1').onclick=()=>csvFile('encaissements-'+sfx+'.csv',['Date','Client','Activité','Catégorie','Montant (DH)','Mode','Facture','Note','Statut'],db.encaissements.filter(e=>inPer(e.date,Y,Q)).sort((x,y)=>pd(x.date)-pd(y.date)).map(e=>[e.date.slice(0,10),cn(e.clientId)||'',act(e.activiteId),catT(e.activiteId),csvDh(e.montant),tf('mode.'+e.mode),(db.documents.find(d=>d.id===e.factureId)||{}).numero||'',e.note||'',st(e)]));
+ $('#x2').onclick=()=>csvFile('factures-'+sfx+'.csv',['Numéro','Date','Client','ICE client','Activité','Total (DH)','Encaissé (DH)','Reste (DH)','Statut'],db.documents.filter(d=>d.type==='facture'&&inPer(d.date,Y,Q)).sort((x,y)=>x.annee-y.annee||x.seq-y.seq).map(f=>[f.numero,f.date,f.cl.nom,f.cl.ice,act(f.activiteId),csvDh(f.total),csvDh(paye(f)),csvDh(reste(f)),tf(f.statut==='annulee'?'fac.s.annulee':reste(f)===0?'fac.s.payee':'ex.open')]));
+ $('#x3').onclick=()=>csvFile('depenses-'+sfx+'.csv',['Date','Catégorie','Fournisseur','Activité','Montant (DH)','Mode','Note','Statut'],db.depenses.filter(d=>inPer(d.date,Y,Q)).sort((x,y)=>pd(x.date)-pd(y.date)).map(d=>[d.date.slice(0,10),(db.catDep.find(c=>c.id===d.cat)||{}).nom||'',d.fournisseur||'',act(d.activiteId),csvDh(d.montant),tf('mode.'+d.mode),d.note||'',st(d)]));
  $('#x4').onclick=()=>confirmBox(m,t('ex.json.c'),t('ex.json.y'),()=>{saveFile('auto-manag-kves-donnees-'+localIso()+'.json','application/json',JSON.stringify(db,null,1));viewApp()})},
 dep(m){const Y=route.dy||yr(),Q=route.dq||0,all=db.depenses.filter(d=>yearOf(d)===Y&&(!Q||qOf(d.date)===Q)).sort((x,y)=>pd(y.date)-pd(x.date)||String(y.cree||'').localeCompare(String(x.cree||''))),ok=all.filter(d=>!d.annule);
  const ds=ok.reduce((s,d)=>s+d.montant,0),ca=taxe(encPeriode(Y,Q)).caTotal,ys=[...new Set([yr(),...db.depenses.map(yearOf),...db.encaissements.map(yearOf)])].sort((x,y)=>y-x),cn2=id=>(db.catDep.find(c=>c.id===id)||{}).nom||t('dep.c.autre'),an2=id=>id?(db.activites.find(x=>x.id===id)||{}).nom:null;
@@ -378,7 +385,7 @@ actform(m){m.innerHTML=`${backBtn(t('ac.back'))}<h1>${t('ac.new')}</h1><div clas
  m.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{cat=b.dataset.c;m.querySelectorAll('[data-c]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#cum').hidden=cat!=='commerce'});
  $('#sv').onclick=async()=>{const nom=$('#a_nom').value.trim();if(!nom)return err(t('ac.req'));if(db.activites.some(x=>x.nom.toLowerCase()===nom.toLowerCase()&&!x.archive))return err(t('ac.dup'));
   db.activites.push({id:uid(),nom,cat,ajoutee:nowIso(),archive:null});task(t('tk.add',nom));log(t('log.ac.add',nom));await persist();nav('more','act')}},
-aff(m){m.innerHTML=`${backBtn(t('back'))}<h1>${t('more.aff')}</h1><div class="card"><b>${t('aff.theme')}</b><div class="seg">${['auto','light','dark'].map(k=>`<button data-t="${k}" aria-pressed="${theme()===k}">${t('aff.'+k)}</button>`).join('')}</div><p class="mute">${t('aff.hint')}</p></div>`;wireBack(toPlus);m.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{localStorage.setItem('amk.theme',b.dataset.t);applyTheme();viewApp()})},
+aff(m){m.innerHTML=`${backBtn(t('back'))}<h1>${t('more.aff')}</h1><div class="card"><b>${t('aff.theme')}</b><div class="seg">${['auto','light','dark'].map(k=>`<button data-t="${k}" aria-pressed="${theme()===k}">${t('aff.'+k)}</button>`).join('')}</div><p class="mute">${t('aff.hint')}</p></div><div class="card"><b>${t('lang.title')}</b>${langBar()}<p class="mute">${t('lang.hint')}</p></div>`;wireBack(toPlus);m.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{localStorage.setItem('amk.theme',b.dataset.t);applyTheme();viewApp()})},
 loi(m){const p=db.params,f=['taux','plafond','tauxC','plafondC','alerte','seuil','retenue','pen','jours'],K={taux:'taux',plafond:'plafond',tauxC:'tauxCommerce',plafondC:'plafondCommerce',alerte:'alerte',seuil:'seuilClient',retenue:'retenue',pen:'penalite',jours:'alerteJours'};
  m.innerHTML=`${backBtn(t('back'))}<h1>${t('more.loi')}</h1><p class="mute">${t('loi.hint')}</p><div class="card">${f.map(k=>`<div class="row"><label style="flex-direction:row;justify-content:space-between;align-items:center;width:100%;font-weight:400">${t('loi.'+k)}<input type="number" step="any" min="0" id="p_${k}" value="${p[K[k]]}"></label></div>`).join('')}</div><div id="err" class="note bad" hidden></div><button id="ps">${t('save')}</button>`;wireBack(toPlus);
  $('#ps').onclick=async()=>{const n={};for(const k of f){const v=parseFloat($('#p_'+k).value);if(!(v>=0))return err(t('loi.bad',t('loi.'+k)));n[K[k]]=v}Object.assign(db.params,n);log(t('log.loi'));await persist();nav('more')}},
