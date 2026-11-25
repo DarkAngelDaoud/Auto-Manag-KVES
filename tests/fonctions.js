@@ -5,7 +5,7 @@ const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.
 const txt=async s=>(await p.textContent(s||'body'))||'';
 await p.goto(BASE+'index.html');
 T('titre',(await p.title())==='Auto Manag KVES');
-await p.fill('#pw','motdepasse1');await p.fill('#pw2','motdepasse1');T('oeil x2',await p.locator('.eye').count()===2);
+await p.fill('#pw','Phrase-test-2026!');await p.fill('#pw2','Phrase-test-2026!');T('oeil x2',await p.locator('.eye').count()===2);
 await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
 T('accueil',(await txt()).includes('Plafond annuel'));
 // activités
@@ -49,11 +49,11 @@ await p.click('[data-s=demo]');T('démo effacée, vraies données gardées',awai
 await p.click('#bk');await p.click('[data-s=sav]');await p.click('#ex');await p.waitForSelector('#out:not([hidden])');const exp=await p.inputValue('#outta');T('export chiffré',exp.includes('"app":"KVES"')&&!exp.includes('Conseil'));
 await p.click('#bk');await p.click('#lk');await p.waitForSelector('#upw');
 await p.fill('#upw','faux');await p.click('#ugo');await p.waitForSelector('#err:not([hidden])');await p.keyboard.type('abc');T('saisie après erreur',await p.inputValue('#upw')==='abc');
-await p.reload();await p.fill('#upw','motdepasse1');await p.click('#ugo');await p.waitForSelector('nav');
+await p.reload();await p.fill('#upw','Phrase-test-2026!');await p.click('#ugo');await p.waitForSelector('nav');
 T('données persistantes (IndexedDB)',await p.evaluate(()=>db.clients.length===1&&db.activites.length===2));
 // restauration
 await p.evaluate(()=>{db.clients=[]});await p.click('nav [data-tab=more]');await p.click('[data-s=sav]');await p.fill('#imptxt',exp);await p.click('#imp');await p.click('#impok');await p.waitForSelector('#upw');
-await p.fill('#upw','motdepasse1');await p.click('#ugo');await p.waitForSelector('nav');T('restauration',await p.evaluate(()=>db.clients.length===1));
+await p.fill('#upw','Phrase-test-2026!');await p.click('#ugo');await p.waitForSelector('nav');T('restauration',await p.evaluate(()=>db.clients.length===1));
 T('stockage: plus rien dans localStorage',await p.evaluate(()=>localStorage.length===0||!localStorage.getItem('kves.vault')));
 T('aucune erreur JS/CSP',errs.length===0);if(errs.length)console.log(errs);
 console.log(ok+' OK, '+ko+' échecs');await b.close();process.exit(ko?1:0)})();

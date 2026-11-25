@@ -3,7 +3,7 @@ const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},acceptDownloads:true,serviceWorkers:'block'});const p=await ctx.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(BASE+'index.html');
-await p.fill('#pw','motdepasse1');await p.fill('#pw2','motdepasse1');await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
+await p.fill('#pw','Phrase-test-2026!');await p.fill('#pw2','Phrase-test-2026!');await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
 const Y=new Date().getFullYear()-1;
 await p.evaluate(Y=>{db.activites=[{id:'a1',nom:'Conseil',cat:'services'}];db.clients=[{id:'c1',nom:'=HYPERLINK("http://x")',cree:nowIso()}];
  db.encaissements.push({id:'e1',date:Y+'-02-10',clientId:'c1',activiteId:'a1',montant:123457,mode:'vir',note:'T1',annule:null,cree:nowIso()});db.entreprise.nom='KVES';

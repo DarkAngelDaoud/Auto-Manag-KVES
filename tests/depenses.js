@@ -3,7 +3,7 @@ const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});const p=await ctx.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
 await p.goto(BASE+'index.html');
-await p.fill('#pw','motdepasse1');await p.fill('#pw2','motdepasse1');await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
+await p.fill('#pw','Phrase-test-2026!');await p.fill('#pw2','Phrase-test-2026!');await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
 const Y=new Date().getFullYear();
 T('8 catégories par défaut',await p.evaluate(()=>db.catDep.length===8&&db.catDep[0].nom==='Matériel'));
 await p.evaluate(()=>{db.activites=[{id:'a1',nom:'Conseil',cat:'services'}];db.encaissements.push({id:'e1',date:localIso(),montant:100000,activiteId:'a1',mode:'vir',annule:null,cree:nowIso()})});
@@ -27,7 +27,7 @@ await p.click('[data-r]>>nth=0').catch(()=>{});
 // impôt inchangé par les dépenses
 T('impôt non réduit par les dépenses',await p.evaluate(()=>taxe(encPeriode(new Date().getFullYear(),0)).total===1000));
 // persistance + accueil
-await p.reload();await p.fill('#upw','motdepasse1');await p.click('#ugo');await p.waitForSelector('nav');
+await p.reload();await p.fill('#upw','Phrase-test-2026!');await p.click('#ugo');await p.waitForSelector('nav');
 T('dépenses persistantes',await p.evaluate(()=>db.depenses.length===2&&db.depenses.filter(d=>d.annule).length===1));
 T('accueil : carte résultat',(await p.textContent('body')).includes('Résultat '+Y));
 T('aucune erreur JS/CSP',errs.length===0);if(errs.length)console.log(errs);

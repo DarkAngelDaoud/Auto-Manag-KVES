@@ -3,7 +3,7 @@ const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});const p=await ctx.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
 await p.goto(BASE+'index.html');
-await p.fill('#pw','motdepasse1');await p.fill('#pw2','motdepasse1');await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
+await p.fill('#pw','Phrase-test-2026!');await p.fill('#pw2','Phrase-test-2026!');await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
 const Y=new Date().getFullYear();
 // calculs purs
 const r=await p.evaluate(Y=>{const A='a1',C='c1';db.activites=[{id:A,nom:'Conseil',cat:'services'},{id:C,nom:'Vente',cat:'commerce'}];
@@ -28,7 +28,7 @@ await p.click('[data-e]');await p.click('#cfok');await p.waitForSelector('.cance
 const a=await p.evaluate(()=>({n:db.encaissements.length,an:db.encaissements.filter(e=>e.annule).length,ca:caCat('services')}));
 T('annulation : trace conservée, exclue du CA',a.n===2&&a.an===1&&a.ca<1250050);
 // persistance
-await p.reload();await p.fill('#upw','motdepasse1');await p.click('#ugo');await p.waitForSelector('nav');
+await p.reload();await p.fill('#upw','Phrase-test-2026!');await p.click('#ugo');await p.waitForSelector('nav');
 T('encaissements persistants, annulation incluse',await p.evaluate(()=>db.encaissements.length===2&&db.encaissements.filter(e=>e.annule).length===1));
 T('accueil : carte « À déclarer »',(await p.textContent('body')).includes('À déclarer'));
 T('aucune erreur JS/CSP',errs.length===0);if(errs.length)console.log(errs);

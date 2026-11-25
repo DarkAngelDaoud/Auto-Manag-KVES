@@ -3,7 +3,7 @@ const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});const p=await ctx.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
 await p.goto(BASE+'index.html');
-await p.fill('#pw','motdepasse1');await p.fill('#pw2','motdepasse1');await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
+await p.fill('#pw','Phrase-test-2026!');await p.fill('#pw2','Phrase-test-2026!');await p.click('#go');await p.waitForSelector('#rk');await p.check('#ok');await p.click('#next');await p.waitForSelector('nav');
 const Y=new Date().getFullYear();
 const r=await p.evaluate(()=>({a:lineCts(2500,33333),b:lineCts(1000,150000),q:[parseQm('2,5'),parseQm('0'),parseQm('1.2345'),parseQm('abc'),parseQm('10')]}));
 T('ligne 2,5 × 333,33 = 833,33 (arrondi au centime)',r.a===83333);T('ligne 1 × 1500 = 1500',r.b===150000);
@@ -60,7 +60,7 @@ await p.evaluate(()=>{db.entreprise.ice=''});await p.click('nav [data-tab=inv]')
 T('ICE manquant : émission bloquée',(await p.textContent('#err')).includes('ICE'));
 await p.evaluate(()=>{db.entreprise.ice='001122334455667';route.fd=null});
 // persistance + accueil
-await p.reload();await p.fill('#upw','motdepasse1');await p.click('#ugo');await p.waitForSelector('nav');
+await p.reload();await p.fill('#upw','Phrase-test-2026!');await p.click('#ugo');await p.waitForSelector('nav');
 T('factures persistantes',await p.evaluate(()=>db.documents.length===4));
 T('accueil : factures à encaisser',(await p.textContent('body')).includes('Factures à encaisser'));
 T('aucune erreur JS/CSP',errs.length===0);if(errs.length)console.log(errs);
