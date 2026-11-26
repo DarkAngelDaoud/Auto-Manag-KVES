@@ -57,14 +57,26 @@ function taxe(list){const ca={services:0,commerce:0},p=db.params;list.forEach(e=
 const cn=id=>(db.clients.find(c=>c.id===id)||{}).nom,an=id=>(db.activites.find(a=>a.id===id)||{}).nom;
 function alertDate(d,jours){const a=new Date(d);a.setDate(a.getDate()-jours);while(a.getDay()===0||a.getDay()===6)a.setDate(a.getDate()-1);return a}
 const decl=(y,q)=>db.declarations.find(d=>d.annee===y&&d.t===q);
-const dueDate=(y,q)=>{const e=db.params.echeances.find(x=>x.t===q),[m,d]=e.md.split('-').map(Number);return new Date(q==='T4'?y+1:y,m-1,d)};
+// V1.7.1 : périodes de déclaration : trimestrielle (T1..T4) ou mensuelle (M01..M12), selon l'option (CGI art. 82 bis)
+const MOIS_FR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const periods=()=>db.params.periodicite==='M'?Array.from({length:12},(_,i)=>'M'+String(i+1).padStart(2,'0')):['T1','T2','T3','T4'];
+const perMonths=T=>String(T)[0]==='M'?[+String(T).slice(1)-1,+String(T).slice(1)-1]:[(+String(T).slice(1)-1)*3,(+String(T).slice(1)-1)*3+2];
+const encPer=(y,T)=>db.encaissements.filter(e=>{if(e.annule||yearOf(e)!==y)return false;if(!T)return true;const[a,b]=perMonths(T),mo=pd(e.date).getMonth();return mo>=a&&mo<=b});
+const perEnd=(y,T)=>new Date(y,perMonths(T)[1]+1,0);
+const monthName=(i,fr)=>{try{const s=new Intl.DateTimeFormat(fr?'fr-FR':t('locale'),{month:'long'}).format(new Date(2026,i,1));return s.charAt(0).toUpperCase()+s.slice(1)}catch{return MOIS_FR[i]}};
+const perTag=(T,fr)=>String(T)[0]==='M'?monthName(+String(T).slice(1)-1,fr):T;
+const perFull=(T,fr)=>String(T)[0]==='M'?'':(fr?tf:t)('ql.'+T);
+const perTitle=(T,Y,fr)=>perTag(T,fr)+' '+Y+(perFull(T,fr)?' · '+perFull(T,fr):'');
+// une période est « couverte » si l'autre option (mensuelle/trimestrielle) l'a déjà déclarée : évite les faux retards après un changement d'option
+const declCov=(y,T)=>{const r=decl(y,T);if(r)return r;if(String(T)[0]==='M')return decl(y,'T'+Math.ceil(+String(T).slice(1)/3));const q=+String(T).slice(1);return[1,2,3].map(i=>decl(y,'M'+String((q-1)*3+i).padStart(2,'0'))).find(Boolean)};
+const dueDate=(y,T)=>{if(String(T)[0]==='M')return new Date(y,+String(T).slice(1)+1,0);const e=db.params.echeances.find(x=>x.t===T),[m,d]=e.md.split('-').map(Number);return new Date(T==='T4'?y+1:y,m-1,d)};
 function nextDeadline(now=new Date()){const t0=new Date(now.getFullYear(),now.getMonth(),now.getDate()),L=[];
- for(let y=t0.getFullYear()-1;y<=t0.getFullYear()+1;y++)for(const e of db.params.echeances){const[m,d]=e.md.split('-').map(Number);L.push({date:new Date(y,m-1,d),t:e.t,l:e.l,annee:e.t==='T4'?y-1:y})}
- L.sort((x,y)=>x.date-y.date);const best=L.find(x=>x.date>=t0&&!decl(x.annee,x.t))||L.find(x=>x.date>=t0);
+ for(let y=t0.getFullYear()-2;y<=t0.getFullYear()+1;y++)for(const p of periods())L.push({date:dueDate(y,p),t:p,annee:y});
+ L.sort((x,y)=>x.date-y.date);const best=L.find(x=>x.date>=t0&&!declCov(x.annee,x.t))||L.find(x=>x.date>=t0);
  best.jours=Math.round((best.date-t0)/DAY);best.alerte=alertDate(best.date,db.params.alerteJours);best.actif=t0>=best.alerte;return best}
 function todoDecl(now=new Date()){const t0=new Date(now.getFullYear(),now.getMonth(),now.getDate()),o=[];
- for(let y=t0.getFullYear()-1;y<=t0.getFullYear();y++)for(const e of db.params.echeances){const q=+e.t.slice(1),due=dueDate(y,e.t),r=decl(y,e.t);
-  if(!r){if(due<t0&&t0-due<400*DAY&&taxe(encPeriode(y,q)).caTotal>0)o.push({k:'late',annee:y,t:e.t})}else if(r.statut==='declare')o.push({k:'pay',annee:y,t:e.t})}
+ for(let y=t0.getFullYear()-1;y<=t0.getFullYear();y++)for(const p of periods()){const due=dueDate(y,p),r=decl(y,p);
+  if(!r){if(!declCov(y,p)&&due<t0&&t0-due<400*DAY&&taxe(encPer(y,p)).caTotal>0)o.push({k:'late',annee:y,t:p})}else if(r.statut==='declare')o.push({k:'pay',annee:y,t:p})}
  return o}
 const catOf=e=>(db.activites.find(a=>a.id===e.activiteId)||{}).cat||'services';
 const caCat=cat=>db.encaissements.filter(e=>!e.annule&&yearOf(e)===yr()&&catOf(e)===cat).reduce((a,e)=>a+e.montant,0);

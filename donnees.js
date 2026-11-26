@@ -1,7 +1,7 @@
 'use strict';
 /* Auto Manag KVES · signé KVES · constantes et règles légales par défaut (modifiables dans l'application : Plus, Règles légales). Règles légales en DH ; montants des opérations en centimes. */
-const APP_VERSION='1.7.0',PW_ITER=600000,RK_ITER=100000,AUTOLOCK_MS=5*60*1000,DAY=864e5;
-const DONNEES={params:{taux:1,plafond:200000,tauxCommerce:0.5,plafondCommerce:500000,alerte:80,seuilClient:80000,retenue:30,penalite:100,alerteJours:7,
+const APP_VERSION='1.7.1',PW_ITER=600000,RK_ITER=100000,AUTOLOCK_MS=5*60*1000,DAY=864e5;
+const DONNEES={params:{taux:1,plafond:200000,tauxCommerce:0.5,plafondCommerce:500000,alerte:80,seuilClient:80000,retenue:30,penalite:100,alerteJours:7,periodicite:'T',
  echeances:[{t:'T1',l:'Janvier à mars',md:'04-30'},{t:'T2',l:'Avril à juin',md:'07-31'},{t:'T3',l:'Juillet à septembre',md:'10-31'},{t:'T4',l:'Octobre à décembre',md:'01-31'}]}};
 
 // V1.7.0 : références légales (textes consultés le 26/11/2026 : loi 114-13, CGI 2026, décret 2-15-303)
@@ -10,7 +10,7 @@ const REGLES=[
 {id:'pf2',ok:1,t:"Plafond : activités industrielles, commerciales et artisanales",v:p=>dhp(p.plafondCommerce),s:'Loi 114-13, art. 1'},
 {id:'tx1',ok:1,t:"Impôt sur le chiffre d'affaires encaissé : prestations de services",v:p=>p.taux+' %',s:'CGI, art. 42 bis et 73'},
 {id:'tx2',ok:1,t:"Impôt sur le chiffre d'affaires encaissé : activités commerciales, industrielles, artisanales",v:p=>p.tauxCommerce+' %',s:'CGI, art. 42 bis et 73'},
-{id:'dc',ok:1,t:"Déclaration du chiffre d'affaires encaissé, même nul : trimestrielle, avant la fin du mois qui suit le trimestre (T1 → 30 avril, T2 → 31 juillet, T3 → 31 octobre, T4 → 31 janvier). L'option mensuelle existe aussi (avant la fin du mois suivant) : elle sera ajoutée dans une prochaine version.",s:'CGI, art. 82 bis ; loi 114-13, art. 6'},
+{id:'dc',ok:1,t:"Déclaration du chiffre d'affaires encaissé, même nul : trimestrielle, avant la fin du mois qui suit le trimestre (T1 → 30 avril, T2 → 31 juillet, T3 → 31 octobre, T4 → 31 janvier). Option mensuelle : avant la fin du mois qui suit le mois d'encaissement (réglage dans Plus, Règles légales). La périodicité vient de l'option choisie à l'inscription.",s:'CGI, art. 82 bis ; loi 114-13, art. 6'},
 {id:'cl',ok:1,t:"Au-delà de 80 000 DH de prestations par client et par an, le surplus est soumis à retenue à la source",v:p=>dhp(p.seuilClient)+' · '+p.retenue+' %',s:'CGI, art. 42 bis ; art. 73-II-G-8°'},
 {id:'rad',ok:1,t:"Radiation du registre : aucun CA, ou CA nul, pendant une année civile entière (hors année d'inscription) ; non-versement de l'impôt et de la cotisation sociale pendant une année civile ; CA au-dessus des plafonds deux années consécutives.",s:'Loi 114-13, art. 8'},
 {id:'cpt',ok:1,t:"Dispense de comptabilité commerciale et d'inscription au registre du commerce.",s:'Loi 114-13, art. 2'},
