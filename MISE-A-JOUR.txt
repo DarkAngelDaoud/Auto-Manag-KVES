@@ -1,6 +1,7 @@
 Auto Manag KVES · signé KVES · historique des versions
 (Procédure : une modification par version. Mettre à jour le numéro dans donnees.js, sw.js, version.json et index.html, ajouter une ligne ici, puis déposer les fichiers dans le dépôt.)
 
+V1.5.3  Verrouillage en arrière-plan (immédiat, 1 min, 5 min)
 V1.5.2  Réinitialiser tout (effacement complet, avec confirmation)
 V1.5.1  Code découpé en fichiers par domaine, sans changement visible
 V1.5.0  Langues : français, anglais, arabe (droite à gauche) ; documents légaux toujours en français ; saisie de chiffres arabes acceptée.

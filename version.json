@@ -1,1 +1,1 @@
-{"v":"1.5.2","notes":["Nouveau : Plus, Sécurité, « Réinitialiser tout » efface toutes tes données de l'appareil, après confirmation (mot de passe et mot à taper).","Sur l'écran de connexion, le lien « Effacer et recommencer » aide en phase de test ; tu peux le masquer dans Sécurité."]}
+{"v":"1.5.3","notes":["Sécurité : l'appli se verrouille dès que tu la quittes (écran éteint ou autre application). Réglable dans Plus, Sécurité : immédiat, 1 minute ou 5 minutes.","Tes données et ton mot de passe ne sont pas modifiés."]}

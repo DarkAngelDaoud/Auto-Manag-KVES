@@ -32,7 +32,7 @@ declfiche(m){const t=tf,dhx=dhxFr,fmt=fmtFr;const a=route.arg||{},Y=a.annee,T=a.
 <p>${r?t('dc.declon')+' : '+fmt(pd(r.dateDecl))+(r.statut==='paye'?' · '+t('dc.paidon',fmt(pd(r.datePaie)))+' : '+dhx(r.montant):' · '+t('dc.s.decl')):t('dc.s.todo')}${r&&r.ref?' · '+esc(r.ref):''}</p>
 <table class="inv-t"><thead><tr><th>${t('enc.date')}</th><th>${t('enc.client')}</th><th>${t('fac.tl')}</th></tr></thead><tbody>${L.map(x=>`<tr><td>${fmt(pd(x.date))}</td><td>${esc(cn(x.clientId)||t('enc.sans'))}</td><td class="num">${dhx(x.montant)}</td></tr>`).join('')||`<tr><td colspan="3">${t('enc.empty')}</td></tr>`}</tbody></table><p class="mute">${t('dc.disc')}</p></article>
 <button id="fp" class="sec noprint">${t('fac.print')}</button>`;
- wireBack(()=>nav('more','decl'));$('#fp').onclick=()=>window.print()},
+ wireBack(()=>nav('more','decl'));$('#fp').onclick=()=>{holdLock();window.print()}},
 exp(m){const Y=route.xy||yr(),Q=route.xq||0,ys=[...new Set([yr(),...db.encaissements.map(yearOf),...db.depenses.map(yearOf),...db.documents.map(d=>d.annee)])].sort((x,y)=>y-x),sfx=Y+(Q?'-T'+Q:'');
  m.innerHTML=`${backBtn(t('back'))}<h1>${t('more.exp')}</h1><p class="mute">${t('ex.hint')}</p><div class="filters">${ys.map(y=>`<button data-y="${y}" aria-pressed="${y===Y}">${y}</button>`).join('')}</div><div class="filters">${[0,1,2,3,4].map(q=>`<button data-q="${q}" aria-pressed="${q===Q}">${q?'T'+q:t('enc.f.all')}</button>`).join('')}</div>
 <div class="card"><button id="x1">${t('ex.enc')}</button><button id="x2" class="sec">${t('ex.fac')}</button><button id="x3" class="sec">${t('ex.dep')}</button></div>

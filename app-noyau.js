@@ -24,6 +24,13 @@ async function changePw(old,npw){const raw=await unwrap(old,vault.pw);vault.pw=a
 function lock(){dek=null;db=null;vault=null;clearTimeout(lockTimer);route.tab='home';route.sub=null;route.arg=null;boot()}
 function arm(){clearTimeout(lockTimer);if(db)lockTimer=setTimeout(lock,AUTOLOCK_MS)}
 ['pointerdown','keydown','scroll'].forEach(e=>addEventListener(e,arm,{passive:true}));
+// V1.5.3 : verrouillage dès que l'appli passe en arrière-plan (réglable)
+const lockBg=()=>{try{const s=localStorage.getItem('amk.lockbg');if(s===null)return 60000;const v=+s;return v===0||v===60000||v===300000?v:60000}catch{return 60000}};
+let hideAt=0,hold=0,heldAtHide=false;const holdLock=()=>{hold=Date.now()+90000};
+document.addEventListener('visibilitychange',()=>{if(!db)return;
+ if(document.hidden){hideAt=Date.now();heldAtHide=Date.now()<hold;if(!heldAtHide&&lockBg()===0)lock()}
+ else if(hideAt){const d=Date.now()-hideAt;hideAt=0;if(d>=(heldAtHide?AUTOLOCK_MS:lockBg()))lock()}});
+
 
 /* ---- Calculs (échéances, plafonds, clients) ---- */
 let MOIS=t('m');

@@ -66,6 +66,6 @@ const toPlus=()=>nav('more');
 const retGo=()=>{const r=route.ret||{tab:'more',sub:'enc'};route.ret=null;route.pre=null;nav(r.tab,r.sub,r.arg)};
 const csvCell=v=>{let s=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return/[;"\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
 const csvDh=c=>(c/100).toFixed(2).replace('.',',');
-const saveFile=(name,mime,text)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
+const saveFile=(name,mime,text)=>{holdLock();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
 const csvFile=(name,head,rows)=>saveFile(name,'text/csv;charset=utf-8','﻿'+[head,...rows].map(r=>r.map(csvCell).join(';')).join('\r\n'));
 const inPer=(date,Y,Q)=>yearOf({date})===Y&&(!Q||qOf(date)===Q);
