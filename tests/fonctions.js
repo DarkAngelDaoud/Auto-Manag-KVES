@@ -52,7 +52,7 @@ await p.fill('#upw','faux');await p.click('#ugo');await p.waitForSelector('#err:
 await p.reload();await p.fill('#upw','Phrase-test-2026!');await p.click('#ugo');await p.waitForSelector('nav');
 T('données persistantes (IndexedDB)',await p.evaluate(()=>db.clients.length===1&&db.activites.length===2));
 // restauration
-await p.evaluate(()=>{db.clients=[]});await p.click('nav [data-tab=more]');await p.click('[data-s=sav]');await p.fill('#imptxt',exp);await p.click('#imp');await p.click('#impok');await p.waitForSelector('#upw');
+await p.evaluate(()=>{db.clients=[]});await p.click('nav [data-tab=more]');await p.click('[data-s=sav]');await p.fill('#imptxt',exp);await p.fill('#imppw','Phrase-test-2026!');await p.click('#imp');await p.waitForSelector('#cf:not([hidden])');await p.click('#impok');await p.waitForSelector('#upw');
 await p.fill('#upw','Phrase-test-2026!');await p.click('#ugo');await p.waitForSelector('nav');T('restauration',await p.evaluate(()=>db.clients.length===1));
 T('stockage: plus rien dans localStorage',await p.evaluate(()=>localStorage.length===0||!localStorage.getItem('kves.vault')));
 T('aucune erreur JS/CSP',errs.length===0);if(errs.length)console.log(errs);
