@@ -144,6 +144,12 @@ function bkInfo(){if(!db)return null;const ref=db.lastBackup||(db.journal&&db.jo
 function bkNote(i,btn){if(!i||i.days<3)return'';const crit=i.days>=7,txt=i.never?t('bk.nev',i.days):t(crit?'bk.crit':'bk.warn',i.days);return`<div class="note ${crit?'bad':'warn'}" role="${crit?'alert':'status'}">${txt}${btn?`<button class="sec" id="bkgo" style="margin-top:8px">${t('bk.now')}</button>`:''}</div>`}
 function bkMirror(){try{const i=bkInfo();if(i)localStorage.setItem('amk.bkd',String(i.days>=0?Date.now()-i.days*DAY:Date.now()))}catch{}}
 
+// V1.6.0 : ouvrir une sauvegarde sans rien modifier (mot de passe ou clé de récupération)
+async function peekBackup(x,secret){const v=JSON.parse(x);let raw;try{raw=await unwrap(secret,v.pw)}catch{raw=await unwrap(normRk(secret),v.rk)}const k=await importDek(raw);return{upd:v.updated,d:norm(JSON.parse(dec.decode(await open(k,v.data))))}}
+const bkSumRow=(l,a)=>`<div class="row"><span>${l}</span><b>${a}</b></div>`;
+const bkSum=(d,upd)=>`<div class="note ok">${t('vf.ok',upd?new Date(upd).toLocaleString(t('locale')):'—')}</div>`+bkSumRow(t('vf.cl'),d.clients.length)+bkSumRow(t('vf.fa'),d.documents.length)+bkSumRow(t('vf.en'),d.encaissements.length)+bkSumRow(t('vf.de'),d.depenses.length);
+const bkName=()=>{const n=new Date(),p=x=>String(x).padStart(2,'0');return 'AutoManagKVES_'+n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate())+'_'+p(n.getHours())+'h'+p(n.getMinutes())+'.kves'};
+
 async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink'].forEach(k=>localStorage.removeItem(k))}catch{}};
  if(navigator.locks)await navigator.locks.request('amk-vault',run);else await run();
  dek=null;db=null;vault=null;clearTimeout(lockTimer);location.reload()}
