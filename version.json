@@ -1,1 +1,1 @@
-{"v":"1.5.1","notes":["Aucun changement visible : le code de l'application est réorganisé en plusieurs fichiers pour être plus sûr à maintenir.","Tes données et ton mot de passe ne sont pas modifiés."]}
+{"v":"1.5.2","notes":["Nouveau : Plus, Sécurité, « Réinitialiser tout » efface toutes tes données de l'appareil, après confirmation (mot de passe et mot à taper).","Sur l'écran de connexion, le lien « Effacer et recommencer » aide en phase de test ; tu peux le masquer dans Sécurité."]}

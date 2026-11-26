@@ -9,6 +9,7 @@ const openDb=name=>new Promise((res,rej)=>{const r=indexedDB.open(name,1);r.onup
 const idb=()=>openDb(DBN);
 const kvGet=async(k,name)=>{const d=await(name?openDb(name):idb());try{return await new Promise((res,rej)=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}finally{d.close()}};
 const kvSet=async(k,v)=>{const d=await idb();try{return await new Promise((res,rej)=>{const x=d.transaction('kv','readwrite');x.objectStore('kv').put(v,k);x.oncomplete=()=>res();x.onerror=()=>rej(x.error)})}finally{d.close()}};
+const kvClear=async()=>{const d=await idb();try{return await new Promise((res,rej)=>{const x=d.transaction('kv','readwrite'),o=x.objectStore('kv');o.delete('vault');o.delete('vault.bak');x.oncomplete=()=>res();x.onerror=()=>rej(x.error);x.onabort=()=>rej(x.error)})}finally{d.close()}};
 async function getVault(){let s=await kvGet('vault');if(!s&&await kvGet('vault.bak'))return null;return s}
 
 /* ---- Chiffrement : mot de passe -> clé qui protège la clé des données (AES-256-GCM) ---- */

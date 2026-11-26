@@ -12,11 +12,11 @@ const defaultDb=()=>({v:2,params:JSON.parse(JSON.stringify(DONNEES.params)),
  activites:[],clients:[],taches:[],documents:[],entreprise:{nom:'',adresse:'',ice:'',idae:'',tel:'',mail:'',iban:'',tva:tf('fac.tva.def'),cond:tf('fac.cond.def')},encaissements:[],depenses:[],catDep:['mat','log','trans','tel','cot','four','form','autre'].map(k=>({id:k,nom:t('dep.c.'+k)})),declarations:[],journal:[{d:nowIso(),e:t('log.create')}],lastBackup:null});
 function norm(d){const D=defaultDb();d.v=2;for(const k of Object.keys(D))if(d[k]===undefined)d[k]=D[k];for(const k of Object.keys(D.params))if(d.params[k]===undefined)d.params[k]=D.params[k];return d}
 const log=e=>db.journal.push({d:nowIso(),e});
-async function persist(){const run=async()=>{const cur=await kvGet('vault');if(cur){let u;try{u=JSON.parse(cur).updated}catch{}if(u!==vault.updated){viewConflict();throw new Error('conflict')}}   // une autre fenêtre a écrit entre-temps : on n'écrase jamais
+async function persist(creating){const run=async()=>{const cur=await kvGet('vault');if(!cur&&!creating){viewConflict();throw new Error('conflict')}if(cur){let u;try{u=JSON.parse(cur).updated}catch{}if(u!==vault.updated){viewConflict();throw new Error('conflict')}}   // une autre fenêtre a écrit entre-temps : on n'écrase jamais
  vault.data=await seal(dek,enc.encode(JSON.stringify(db)));vault.updated=nowIso();if(cur)await kvSet('vault.bak',cur);await kvSet('vault',JSON.stringify(vault))};
  return navigator.locks?navigator.locks.request('amk-vault',run):run()}
 addEventListener('unhandledrejection',e=>{if(e.reason&&e.reason.message==='conflict')e.preventDefault()});
-async function setup(pw){if(await getVault())throw new Error('exists');const raw=crypto.getRandomValues(new Uint8Array(32)),rk=newRk();vault={v:1,app:'KVES',pw:await wrap(pw,PW_ITER,raw),rk:await wrap(normRk(rk),RK_ITER,raw)};dek=await importDek(raw);db=defaultDb();await persist();return rk}
+async function setup(pw){if(await getVault())throw new Error('exists');const raw=crypto.getRandomValues(new Uint8Array(32)),rk=newRk();vault={v:1,app:'KVES',pw:await wrap(pw,PW_ITER,raw),rk:await wrap(normRk(rk),RK_ITER,raw)};dek=await importDek(raw);db=defaultDb();await persist(true);return rk}
 async function load(v,raw){vault=v;dek=await importDek(raw);db=norm(JSON.parse(dec.decode(await open(dek,v.data))));}
 async function unlock(pw){const v=JSON.parse(await getVault());await load(v,await unwrap(pw,v.pw))}
 async function recover(rk,npw){const v=JSON.parse(await getVault()),raw=await unwrap(normRk(rk),v.rk);await load(v,raw);vault.pw=await wrap(npw,PW_ITER,raw);log(t('log.pwr'));await persist()}
@@ -125,11 +125,22 @@ function viewRecovery(rk){show(`<main><h1>${t('rk.title')}</h1><p>${t('rk.text')
 <label style="flex-direction:row;align-items:center;gap:10px" class="noprint"><input type="checkbox" id="ok" style="width:22px;height:22px"> ${t('rk.ok')}</label><button id="next" class="noprint" disabled>${t('continue')}</button></main>`);
  $('#ok').onchange=e=>$('#next').disabled=!e.target.checked;$('#print').onclick=async e=>{try{await navigator.clipboard.writeText(rk);e.target.textContent=t('rk.copied')}catch{const r=document.createRange();r.selectNodeContents($('#rk'));getSelection().removeAllRanges();getSelection().addRange(r);e.target.textContent=t('rk.sel')}};$('#next').onclick=()=>{arm();viewApp()}}
 function viewLocked(){show(`<main style="gap:16px">${bigBrand()}<div class="card"><b>${t('lock.title')}</b><label>${t('lock.pw')}<input id="upw" type="password" autocomplete="current-password"></label>
-<div id="err" class="note bad" role="alert" hidden></div><button id="ugo">${t('lock.title')}</button><button class="link" id="lost">${t('lock.lost')}</button></div></main>`);
+<div id="err" class="note bad" role="alert" hidden></div><button id="ugo">${t('lock.title')}</button><button class="link" id="lost">${t('lock.lost')}</button>${rstLink()?`<button class="link" id="wipe">${t('rs.lost')}</button>`:''}</div></main>`);
+ if(rstLink())$('#wipe').onclick=()=>viewWipe(viewLocked,false);
  const go=async()=>{const b=$('#ugo');busy(b,true);try{await unlock($('#upw').value);arm();viewApp()}catch{busy(b,false);const f=$('#upw');f.value='';f.focus();err(t('lock.bad'))}};$('#ugo').onclick=go;$('#upw').onkeydown=e=>{if(e.key==='Enter')go()};
  $('#lost').onclick=()=>{show(`<main><h1>${t('rec.title')}</h1><div class="card"><label>${t('rec.key')}<input id="rkin" type="text" autocapitalize="characters" autocomplete="off"></label><label>${t('rec.new')}<input id="npw" type="password" autocomplete="new-password"></label><label>${t('rec.confirm')}<input id="npw2" type="password" autocomplete="new-password"></label>
 <div id="err" class="note bad" role="alert" hidden></div><button id="rgo">${t('rec.go')}</button><button class="link" id="back">${t('back')}</button></div></main>`);
   meter('npw');$('#back').onclick=viewLocked;$('#rgo').onclick=async e=>{const n=$('#npw').value;{const k=pwCheck(n);if(k)return err(t(k))}if(n!==$('#npw2').value)return err(t('err.pwdiff'));busy(e.target,true);try{await recover($('#rkin').value,n);arm();viewApp()}catch{busy(e.target,false);err(t('rec.bad'))}}}}
+
+async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink'].forEach(k=>localStorage.removeItem(k))}catch{}};
+ if(navigator.locks)await navigator.locks.request('amk-vault',run);else await run();
+ dek=null;db=null;vault=null;clearTimeout(lockTimer);location.reload()}
+const rstLink=()=>{try{return localStorage.getItem('amk.rstlink')!=='0'}catch{return true}};
+function viewWipe(back,authed){show(`<main style="gap:16px">${bigBrand()}<div class="card"><b>${t('rs.title')}</b><p>${t('rs.warn')}</p>${authed?`<button class="sec" id="rsb">${t('rs.bak')}</button><label>${t('rs.pw')}<input id="rspw" type="password" autocomplete="current-password"></label>`:''}<label>${t('rs.type',t('rs.word'))}<input id="rsw" type="text" autocomplete="off" autocapitalize="characters"></label><label style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="rsk" checked style="width:22px;height:22px"> ${t('rs.keep')}</label><div id="err" class="note bad" role="alert" hidden></div><button class="danger" id="rsgo">${t('rs.go')}</button><button class="link" id="rsno">${t('cancel')}</button></div></main>`);
+ $('#rsno').onclick=back;if(authed)$('#rsb').onclick=()=>saveFile('auto-manag-kves-donnees-'+localIso()+'.json','application/json',JSON.stringify(db,null,1));
+ $('#rsgo').onclick=async e=>{if($('#rsw').value.trim().toUpperCase()!==t('rs.word').toUpperCase())return err(t('rs.badw'));
+  if(authed){try{await unwrap($('#rspw').value,vault.pw)}catch{return err(t('sec.bad'))}}
+  busy(e.target,true);try{await wipeAll($('#rsk').checked)}catch{busy(e.target,false);err(t('se.title'))}}}
 
 function viewApp(){const tabs=['home','clients','inv','ech','more'];
  show(`<main id="m"></main><nav aria-label="Navigation principale">${tabs.map(k=>`<button data-tab="${k}" ${route.tab===k?'aria-current="page"':''}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[k]}</svg>${t('tab.'+k)}</button>`).join('')}</nav>`);
