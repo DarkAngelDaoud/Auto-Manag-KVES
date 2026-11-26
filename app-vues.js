@@ -14,7 +14,7 @@ ${hasC?`<div class="card"><div class="l1"><span>${t('hero.cap2')}</span><b>${dh(
 ${todoDecl().map(x=>`<div class="note ${x.k==='late'?'bad':''}">${t(x.k==='late'?'dc.late':'dc.topay',x.t,x.annee)}</div>`).join('')}
 ${(()=>{const dp=db.depenses.filter(d=>!d.annule&&yearOf(d)===yr());if(!dp.length)return'';const ca=taxe(encPeriode(yr(),0)).caTotal,ds=dp.reduce((s,d)=>s+d.montant,0);return `<div class="card"><b>${t('dep.res',yr())}</b><div class="row"><span>${t('dep.in')}</span><b>${dhx(ca)}</b></div><div class="row"><span>${t('dep.out')}</span><b>${dhx(ds)}</b></div><div class="row"><b>${t('dep.net')}</b><b>${dhx(ca-ds)}</b></div></div>`})()}
 ${(()=>{const L=facSorted().filter(f=>reste(f)>0);return L.length?`<div class="card"><div class="row"><b>${t('fac.home',L.length)}</b><b>${dhx(L.reduce((s,f)=>s+reste(f),0))}</b></div></div>`:''})()}
-${bkNote(bkInfo(),true)}
+${bkNote(bkInfo(),true)}${legalNotes()}
 ${demo?`<div class="note ok">${t('demo.on')}</div>`:''}
 ${open.length?`<div class="card"><b>${t('todo')}</b>${open.slice(0,3).map(x=>`<div class="row"><span>${esc(x.texte)}</span><button class="sec" data-tk="${x.id}" style="min-height:40px">${t('done')}</button></div>`).join('')}${open.length>3?`<span class="mute">${t('more_n',open.length-3)}</span>`:''}</div>`:''}
 <div class="card"><b>${t('steps')}</b><ul class="steps">${[[1,t('st.vault')],[1,t('st.key')],[!!db.lastBackup,t('st.bk')],[actives.length>0,t('st.act')],[db.clients.some(c=>!c.archive),t('st.cl')],[0,t('st.next')]].map(([d,l],i)=>`<li class="${d?'done':''}"><i>${d?'✓':i+1}</i><span>${l}</span></li>`).join('')}</ul></div>`;
@@ -60,7 +60,7 @@ ${info?`<div class="card">${info}</div>`:''}<button id="ne">${t('cl.enc')}</butt
 
 /* ---- Plus ---- */
 function more(m){if(route.sub)return subs[route.sub](m);
- m.innerHTML=`<h1>${t('tab.more')}</h1><div class="card">${['enc','dep','decl','exp','ent','act','aff','loi','sec','sav','demo'].map(k=>`<button class="link" style="justify-content:space-between;border-top:1px solid var(--line);border-radius:0;width:100%" data-s="${k}">${t('more.'+k)}<span>›</span></button>`).join('')}</div>${upd.p?`<button id="upl">${t('more.upd',upd.p.v)}</button>`:''}<button class="sec" id="lk">${t('lock.now2')}</button><p class="mute" style="text-align:center">${t('more.ver',APP_VERSION)}</p>`;
+ m.innerHTML=`<h1>${t('tab.more')}</h1><div class="card">${['enc','dep','decl','exp','ent','act','aff','loi','regles','sec','sav','demo'].map(k=>`<button class="link" style="justify-content:space-between;border-top:1px solid var(--line);border-radius:0;width:100%" data-s="${k}">${t('more.'+k)}<span>›</span></button>`).join('')}</div>${upd.p?`<button id="upl">${t('more.upd',upd.p.v)}</button>`:''}<button class="sec" id="lk">${t('lock.now2')}</button><p class="mute" style="text-align:center">${t('more.ver',APP_VERSION)}</p>`;
  if(upd.p)$('#upl').onclick=()=>updStep(2);m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>nav('more',b.dataset.s));$('#lk').onclick=lock}
 const toPlus=()=>nav('more');
 const retGo=()=>{const r=route.ret||{tab:'more',sub:'enc'};route.ret=null;route.pre=null;nav(r.tab,r.sub,r.arg)};

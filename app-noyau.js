@@ -9,7 +9,7 @@ const nowIso=()=>new Date().toISOString();
 
 /* ---- Données et règles légales (modifiables). Montants des opérations en CENTIMES (entiers) ; règles légales en DH. ---- */
 const defaultDb=()=>({v:2,params:JSON.parse(JSON.stringify(DONNEES.params)),
- activites:[],clients:[],taches:[],documents:[],entreprise:{nom:'',adresse:'',ice:'',idae:'',tel:'',mail:'',iban:'',tva:tf('fac.tva.def'),cond:tf('fac.cond.def')},logos:{},encaissements:[],depenses:[],catDep:['mat','log','trans','tel','cot','four','form','autre'].map(k=>({id:k,nom:t('dep.c.'+k)})),declarations:[],journal:[{d:nowIso(),e:t('log.create')}],lastBackup:null});
+ activites:[],clients:[],taches:[],documents:[],entreprise:{nom:'',adresse:'',ice:'',idae:'',tel:'',mail:'',iban:'',tva:tf('fac.tva.def'),cond:tf('fac.cond.def')},logos:{},verifie:{},encaissements:[],depenses:[],catDep:['mat','log','trans','tel','cot','four','form','autre'].map(k=>({id:k,nom:t('dep.c.'+k)})),declarations:[],journal:[{d:nowIso(),e:t('log.create')}],lastBackup:null});
 function norm(d){const D=defaultDb();d.v=2;for(const k of Object.keys(D))if(d[k]===undefined)d[k]=D[k];for(const k of Object.keys(D.params))if(d.params[k]===undefined)d.params[k]=D.params[k];return d}
 const log=e=>db.journal.push({d:nowIso(),e});
 async function persist(creating){const run=async()=>{const cur=await kvGet('vault');if(!cur&&!creating){viewConflict();throw new Error('conflict')}if(cur){let u;try{u=JSON.parse(cur).updated}catch{}if(u!==vault.updated){viewConflict();throw new Error('conflict')}}   // une autre fenêtre a écrit entre-temps : on n'écrase jamais
@@ -158,6 +158,19 @@ async function logoFromFile(file){if(!file||!/^image\/(png|jpeg|webp)$/.test(fil
   const sc=Math.min(1,480/nw,240/nh),w=Math.max(1,Math.round(nw*sc)),h=Math.max(1,Math.round(nh*sc)),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(img,0,0,w,h);
   const u=c.toDataURL('image/jpeg',0.88);if(!u.startsWith('data:image/jpeg'))throw new Error('logo');return{u,w,h}}finally{URL.revokeObjectURL(url)}}
 function gcLogos(){const used=new Set([db.entreprise.logoId,...db.documents.map(d=>d.ent&&d.ent.logoId)].filter(Boolean));for(const k of Object.keys(db.logos))if(!used.has(k))delete db.logos[k]}
+
+// V1.7.0 : alertes de radiation (loi 114-13, art. 8)
+const plafOf=cat=>(cat==='commerce'?db.params.plafondCommerce:db.params.plafond)*100;
+const caCatY=(cat,y)=>db.encaissements.filter(e=>!e.annule&&yearOf(e)===y&&catOf(e)===cat).reduce((a,e)=>a+e.montant,0);
+function legalAlerts(now=new Date()){const Y=now.getFullYear(),o=[],p=db.params;
+ const dates=(db.journal||[]).map(j=>new Date(j.d).getFullYear()).filter(y=>y>2000),start=p.anneeInscription||(dates.length?Math.min(...dates):Y);
+ const total=db.encaissements.filter(e=>!e.annule&&yearOf(e)===Y).reduce((a,e)=>a+e.montant,0);
+ if(Y>start&&now.getMonth()>=9&&total<=0)o.push({k:'lg.nil',cls:now.getMonth()>=11?'bad':'warn',a:[Y]});
+ for(const cat of ['services','commerce']){const pl=plafOf(cat),ca=caCatY(cat,Y),pv=caCatY(cat,Y-1),nm=t('cat.'+cat);if(!pl)continue;
+  if(ca>pl)o.push(pv>pl?{k:'lg.cap2',cls:'bad',a:[Y-1,Y,nm]}:{k:'lg.cap1',cls:'bad',a:[Y,nm,dh(ca),dh(pl)]});
+  else if(pv>pl&&ca>0&&ca>=pl*p.alerte/100)o.push({k:'lg.capw',cls:'warn',a:[Y-1,nm,dh(ca),dh(pl)]})}
+ return o}
+const legalNotes=()=>legalAlerts().map(x=>`<div class="note ${x.cls}" role="${x.cls==='bad'?'alert':'status'}">${t(x.k,...x.a)}</div>`).join('');
 
 async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink'].forEach(k=>localStorage.removeItem(k))}catch{}};
  if(navigator.locks)await navigator.locks.request('amk-vault',run);else await run();
