@@ -1,12 +1,18 @@
 'use strict';
 /* Auto Manag KVES · signé KVES · entreprise, activités, affichage, loi, sécurité, sauvegarde, démo */
 Object.assign(subs,{
-ent(m){const e=db.entreprise,F=[['nom','fac.f.nom',200],['adresse','fac.f.adr',300],['ice','fac.ice',15],['idae','fac.idae',60],['tel','fac.tel',30],['mail','fac.mail',120],['iban','fac.iban',40]];
+ent(m){const e=db.entreprise,lg=e.logoId&&db.logos[e.logoId],F=[['nom','fac.f.nom',200],['adresse','fac.f.adr',300],['ice','fac.ice',15],['idae','fac.idae',60],['tel','fac.tel',30],['mail','fac.mail',120],['iban','fac.iban',40]];
  m.innerHTML=`${backBtn(t('back'))}<h1>${t('more.ent')}</h1><div class="card"><p class="mute">${t('ent.hint')}</p>${F.map(([k,l,n])=>`<label>${t(l)}<input id="n_${k}" type="text" maxlength="${n}" value="${esc(e[k])}"></label>`).join('')}
-<label>${t('fac.f.tva')}<input id="n_tva" type="text" maxlength="200" value="${esc(e.tva)}"></label><label>${t('fac.f.cond')}<textarea id="n_cond" maxlength="500">${esc(e.cond)}</textarea></label><div id="err" class="note bad" role="alert" hidden></div><button id="sv">${t('save')}</button></div>`;
- wireBack(toPlus);$('#sv').onclick=async()=>{const v={};F.forEach(([k])=>v[k]=$('#n_'+k).value.trim());v.tva=$('#n_tva').value.trim();v.cond=$('#n_cond').value.trim();
+<label>${t('fac.f.tva')}<input id="n_tva" type="text" maxlength="200" value="${esc(e.tva)}"></label><label>${t('fac.f.cond')}<textarea id="n_cond" maxlength="500">${esc(e.cond)}</textarea></label><div id="err" class="note bad" role="alert" hidden></div><button id="sv">${t('save')}</button></div>
+<div class="card"><b>${t('ent.logo')}</b>${lg?`<img src="${lg.u}" alt="" style="max-width:240px;max-height:100px;align-self:flex-start;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px">`:''}<input type="file" id="lgf" accept="image/png,image/jpeg,image/webp" aria-label="${t('ent.logo.add')}"><div id="lgerr" class="note bad" role="alert" hidden>${t('ent.logo.bad')}</div>${lg?`<button class="sec" id="lgx">${t('ent.logo.rm')}</button>`:''}<p class="mute">${t('ent.logo.note')}</p></div>
+<div class="card"><b>${t('ent.col')}</b><div class="sws" role="group" aria-label="${t('ent.col')}">${Object.keys(PALETTE).map(k=>`<button data-c="${k}" class="sw" style="background:${PALETTE[k]}" aria-label="${t('col.'+k)}" aria-pressed="${(e.couleur||'bleu')===k}"></button>`).join('')}</div></div>`;
+ wireBack(toPlus);
+ $('#lgf').addEventListener('click',holdLock);$('#lgf').onchange=async ev=>{const fl=ev.target.files[0];if(!fl)return;try{const l=await logoFromFile(fl);const id=uid();db.logos[id]=l;db.entreprise.logoId=id;gcLogos();log(t('log.ent'));await persist();subs.ent(m)}catch(x){if(x&&x.message==='conflict')return;$('#lgerr').hidden=false}};
+ if($('#lgx'))$('#lgx').onclick=async()=>{db.entreprise.logoId=null;gcLogos();log(t('log.ent'));await persist();subs.ent(m)};
+ m.querySelectorAll('.sw').forEach(b=>b.onclick=async()=>{db.entreprise.couleur=b.dataset.c;log(t('log.ent'));await persist();subs.ent(m)});
+ $('#sv').onclick=async()=>{const v={};F.forEach(([k])=>v[k]=$('#n_'+k).value.trim());v.tva=$('#n_tva').value.trim();v.cond=$('#n_cond').value.trim();
   if(v.ice&&!/^\d{15}$/.test(v.ice))return err(t('cl.ice'));if(v.mail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.mail))return err(t('cl.mail'));
-  db.entreprise=v;log(t('log.ent'));await persist();nav('more')}},
+  db.entreprise={...e,...v};log(t('log.ent'));await persist();nav('more')}},
 act(m){const a=db.activites,on=a.filter(x=>!x.archive),off=a.filter(x=>x.archive),row=(x,arch)=>`<li class="card"><div class="l1"><span>${esc(x.nom)}</span><span class="chip ${arch?'gray':''}">${t('cat.'+x.cat)}</span></div><button class="${arch?'':'sec'}" data-a="${x.id}" style="min-height:44px">${t(arch?'ac.rest.b':'ac.arch.b')}</button></li>`;
  m.innerHTML=`${backBtn(t('back'))}<div class="top"><h1>${t('ac.title')}</h1><button id="aa" style="border-radius:22px">${t('ac.add')}</button></div><div class="note">${t('ac.info')}</div><div id="err" class="note bad" role="alert" hidden></div>
 <ul class="list">${on.length?on.map(x=>row(x,0)).join(''):`<li class="card"><b>${t('ac.empty')}</b></li>`}</ul>${off.length?`<h2>${t('ac.archived')}</h2><ul class="list">${off.map(x=>row(x,1)).join('')}</ul>`:''}`;

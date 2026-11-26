@@ -9,7 +9,7 @@ const nowIso=()=>new Date().toISOString();
 
 /* ---- Données et règles légales (modifiables). Montants des opérations en CENTIMES (entiers) ; règles légales en DH. ---- */
 const defaultDb=()=>({v:2,params:JSON.parse(JSON.stringify(DONNEES.params)),
- activites:[],clients:[],taches:[],documents:[],entreprise:{nom:'',adresse:'',ice:'',idae:'',tel:'',mail:'',iban:'',tva:tf('fac.tva.def'),cond:tf('fac.cond.def')},encaissements:[],depenses:[],catDep:['mat','log','trans','tel','cot','four','form','autre'].map(k=>({id:k,nom:t('dep.c.'+k)})),declarations:[],journal:[{d:nowIso(),e:t('log.create')}],lastBackup:null});
+ activites:[],clients:[],taches:[],documents:[],entreprise:{nom:'',adresse:'',ice:'',idae:'',tel:'',mail:'',iban:'',tva:tf('fac.tva.def'),cond:tf('fac.cond.def')},logos:{},encaissements:[],depenses:[],catDep:['mat','log','trans','tel','cot','four','form','autre'].map(k=>({id:k,nom:t('dep.c.'+k)})),declarations:[],journal:[{d:nowIso(),e:t('log.create')}],lastBackup:null});
 function norm(d){const D=defaultDb();d.v=2;for(const k of Object.keys(D))if(d[k]===undefined)d[k]=D[k];for(const k of Object.keys(D.params))if(d.params[k]===undefined)d.params[k]=D.params[k];return d}
 const log=e=>db.journal.push({d:nowIso(),e});
 async function persist(creating){const run=async()=>{const cur=await kvGet('vault');if(!cur&&!creating){viewConflict();throw new Error('conflict')}if(cur){let u;try{u=JSON.parse(cur).updated}catch{}if(u!==vault.updated){viewConflict();throw new Error('conflict')}}   // une autre fenêtre a écrit entre-temps : on n'écrase jamais
@@ -149,6 +149,15 @@ async function peekBackup(x,secret){const v=JSON.parse(x);let raw;try{raw=await 
 const bkSumRow=(l,a)=>`<div class="row"><span>${l}</span><b>${a}</b></div>`;
 const bkSum=(d,upd)=>`<div class="note ok">${t('vf.ok',upd?new Date(upd).toLocaleString(t('locale')):'—')}</div>`+bkSumRow(t('vf.cl'),d.clients.length)+bkSumRow(t('vf.fa'),d.documents.length)+bkSumRow(t('vf.en'),d.encaissements.length)+bkSumRow(t('vf.de'),d.depenses.length);
 const bkName=()=>{const n=new Date(),p=x=>String(x).padStart(2,'0');return 'AutoManagKVES_'+n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate())+'_'+p(n.getHours())+'h'+p(n.getMinutes())+'.kves'};
+
+// V1.6.2 : logo et couleur de facture
+const PALETTE={bleu:'#1F4E9C',vert:'#1E7B4F',rouge:'#B3322B',orange:'#C76A12',violet:'#6A3FA0',gris:'#3A424D'};
+const invFoot=e=>[e.nom,e.ice&&'ICE '+e.ice,e.idae&&'IDAE '+e.idae,e.adresse,e.tel,e.mail].filter(Boolean).join(' · ');
+async function logoFromFile(file){if(!file||!/^image\/(png|jpeg|webp)$/.test(file.type)||file.size>5e6)throw new Error('logo');const url=URL.createObjectURL(file);
+ try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('logo'));i.src=url});const nw=img.naturalWidth,nh=img.naturalHeight;if(!nw||!nh)throw new Error('logo');
+  const sc=Math.min(1,480/nw,240/nh),w=Math.max(1,Math.round(nw*sc)),h=Math.max(1,Math.round(nh*sc)),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(img,0,0,w,h);
+  const u=c.toDataURL('image/jpeg',0.88);if(!u.startsWith('data:image/jpeg'))throw new Error('logo');return{u,w,h}}finally{URL.revokeObjectURL(url)}}
+function gcLogos(){const used=new Set([db.entreprise.logoId,...db.documents.map(d=>d.ent&&d.ent.logoId)].filter(Boolean));for(const k of Object.keys(db.logos))if(!used.has(k))delete db.logos[k]}
 
 async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink'].forEach(k=>localStorage.removeItem(k))}catch{}};
  if(navigator.locks)await navigator.locks.request('amk-vault',run);else await run();

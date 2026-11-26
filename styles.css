@@ -56,3 +56,19 @@ nav button svg{box-sizing:content-box;padding:4px 12px;border-radius:999px;width
 .pwm{display:flex;align-items:center;gap:8px;font-size:12px;margin-top:-4px}.pwt{flex:1;height:6px;border-radius:4px;background:var(--line);overflow:hidden}.pwt i{display:block;height:100%;transition:width .2s;background:#C0392B}.pwm[data-l=mid] i{background:#E0A100}.pwm[data-l=good] i{background:#18B169}.pwm span{min-width:96px}
 
 .langbar{margin-top:6px}.langbar button{min-height:40px;padding-inline:14px}input[type=text],input[type=search],textarea{unicode-bidi:plaintext}[dir=rtl] .pwm span{text-align:start}
+
+/* V1.6.2 : facture moderne (couleur d'accent, logo, tableau, total, cachet, pied de page) */
+.inv2{position:relative;overflow:hidden;gap:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.inv2 .inv-id{display:flex;flex-direction:column;gap:8px;align-items:flex-start}.inv2 .inv-logo{max-width:150px;max-height:60px;object-fit:contain;background:#fff}
+.inv2 .inv-co{display:flex;flex-direction:column;gap:1px;font-size:13px}.inv2 .inv-co b{font-size:15px}
+.inv2 .inv-t1{font-size:26px;color:var(--ac);letter-spacing:.06em}.inv2 .inv-n{display:flex;flex-direction:column;gap:2px;align-items:flex-end;text-align:right;margin-left:auto}.inv2 .inv-ann{color:#B3322B;font-weight:700}
+.inv2 .inv-rule{height:3px;background:var(--ac);border-radius:2px}
+.inv2 .inv-c{border:0;background:rgba(127,127,127,.1);border-left:4px solid var(--ac);border-radius:6px;padding:10px 12px}
+.inv2 .inv-t th{background:var(--ac);color:#fff;border:0;padding:8px 6px}.inv2 .inv-t td{border-bottom:0;padding:8px 6px}.inv2 .inv-t tbody tr:nth-child(even) td{background:rgba(127,127,127,.1)}
+.inv2 .inv-tot{align-self:flex-end;display:flex;justify-content:space-between;gap:24px;align-items:center;background:var(--ac);color:#fff;border-radius:8px;padding:10px 14px;min-width:230px;font-size:15px}.inv2 .inv-tot b{font-size:17px}
+.inv2 .inv-sig{align-self:flex-end;width:210px;height:76px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--mute)}
+.inv2 .inv-foot{border-top:1px solid var(--line);padding-top:8px;text-align:center;font-size:11px;color:var(--mute)}
+.inv2 .inv-wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:84px;font-weight:800;color:rgba(179,50,43,.14);transform:rotate(-28deg);pointer-events:none;z-index:1}
+.sws{display:flex;gap:12px;flex-wrap:wrap}.sw{width:44px;min-height:44px;height:44px;padding:0;border-radius:50%;border:3px solid transparent;box-shadow:0 0 0 1px var(--line)}.sw[aria-pressed=true]{border-color:var(--card);box-shadow:0 0 0 3px var(--text)}
+@page{margin:14mm;@bottom-center{content:"Page " counter(page) " / " counter(pages);font-size:9px;color:#666}}
+@media print{.inv2 .inv-t th{background:var(--ac)!important;color:#fff!important}.inv2 .inv-tot{background:var(--ac)!important;color:#fff!important}.inv2 .inv-c{background:#f2f2f2!important;border-color:var(--ac)!important}.inv2 .inv-t tbody tr:nth-child(even) td{background:#f4f4f4!important}.inv2 .inv-foot,.inv2 .inv-sig{color:#555!important;border-color:#999!important}.inv2 .inv-wm{color:rgba(179,50,43,.14)!important}.inv2 .inv-t1{color:var(--ac)!important}}
