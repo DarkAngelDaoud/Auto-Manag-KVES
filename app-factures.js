@@ -46,14 +46,18 @@ ${e.tva?`<p>${esc(e.tva)}</p>`:''}${e.cond?`<p>${esc(e.cond)}</p>`:''}${e.iban?`
 function invApercu(m){const f=route.fdraft;if(!f)return nav('inv','form');
  m.innerHTML=`<div class="noprint">${backBtn(t('fac.modify'))}</div>${invBody(f,true)}<div id="err" class="note bad noprint" role="alert" hidden></div><button id="em" class="noprint">${t('fac.emit')}</button><span class="mute noprint">${t('fac.lock')}</span>`;
  wireBack(()=>nav('inv','form'));$('#em').onclick=async()=>{const x=await facEmit(f);if(x)err(x)}}
+const canShareFiles=()=>{try{return !!(navigator.canShare&&navigator.canShare({files:[new File([''],'a.pdf',{type:'application/pdf'})]}))}catch{return false}};
 function invFiche(m){const f=db.documents.find(x=>x.id===route.arg&&x.type==='facture');if(!f)return nav('inv');const e=f.ent,c=f.cl,r=reste(f),p=paye(f),ann=f.statut==='annulee';
  const ln=(k,v)=>v?`<div>${t(k)} : ${esc(v)}</div>`:'';
  m.innerHTML=`<div class="noprint">${backBtn(t('fac.back'))}</div>
 ${invBody(f)}
 <div class="card noprint"><div class="row"><span>${t('fac.paid')}</span><b>${dhx(p)}</b></div><div class="row"><span>${t('fac.rest')}</span><b>${dhx(r)}</b></div>${ann?`<span class="chip bad">${t('fac.s.annulee')}</span>`:r===0?`<span class="chip">${t('fac.s.payee')}</span>`:''}</div>
 <div id="err" class="note bad noprint" role="alert" hidden></div>
-${!ann&&r>0?`<button id="fe" class="noprint">${t('fac.enc')}</button>`:''}<button id="fp" class="sec noprint">${t('fac.print')}</button>${ann?'':`<button id="fx" class="sec noprint">${t('fac.cancel')}</button>`}`;
+${!ann&&r>0?`<button id="fe" class="noprint">${t('fac.enc')}</button>`:''}<button id="fp" class="sec noprint">${t('fac.print')}</button><button id="fpdf" class="sec noprint">${t('fac.pdf')}</button>${canShareFiles()?`<button id="fsh" class="sec noprint">${t('fac.share')}</button>`:''}${ann?'':`<button id="fx" class="sec noprint">${t('fac.cancel')}</button>`}`;
  wireBack(()=>nav('inv'));$('#fp').onclick=()=>{holdLock();window.print()};
+ const mkPdf=()=>{const r=pdfFacture(f);if(r.lossy)err(t('fac.pdf.lossy'));return new Blob([r.bytes],{type:'application/pdf'})};
+ $('#fpdf').onclick=()=>{holdLock();const blob=mkPdf(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=pdfName(f);document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
+ if($('#fsh'))$('#fsh').onclick=async()=>{holdLock();try{await navigator.share({files:[new File([mkPdf()],pdfName(f),{type:'application/pdf'})],title:t('fac.no',f.numero)})}catch{}};
  if($('#fe'))$('#fe').onclick=()=>{route.ret={tab:'inv',sub:'fiche',arg:f.id};route.pre={factureId:f.id,clientId:f.clientId,activiteId:f.activiteId,montant:r,numero:f.numero};nav('more','encform')};
  if($('#fx'))$('#fx').onclick=()=>{if(p>0)return err(t('fac.e.paid'));confirmBox(m,t('fac.cancel.c'),t('fac.cancel.yes'),async()=>{f.statut='annulee';f.annule=nowIso();log(t('log.fac.cancel',f.numero));await persist();viewApp()})}}
 
