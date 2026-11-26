@@ -14,11 +14,11 @@ ${hasC?`<div class="card"><div class="l1"><span>${t('hero.cap2')}</span><b>${dh(
 ${todoDecl().map(x=>`<div class="note ${x.k==='late'?'bad':''}">${t(x.k==='late'?'dc.late':'dc.topay',x.t,x.annee)}</div>`).join('')}
 ${(()=>{const dp=db.depenses.filter(d=>!d.annule&&yearOf(d)===yr());if(!dp.length)return'';const ca=taxe(encPeriode(yr(),0)).caTotal,ds=dp.reduce((s,d)=>s+d.montant,0);return `<div class="card"><b>${t('dep.res',yr())}</b><div class="row"><span>${t('dep.in')}</span><b>${dhx(ca)}</b></div><div class="row"><span>${t('dep.out')}</span><b>${dhx(ds)}</b></div><div class="row"><b>${t('dep.net')}</b><b>${dhx(ca-ds)}</b></div></div>`})()}
 ${(()=>{const L=facSorted().filter(f=>reste(f)>0);return L.length?`<div class="card"><div class="row"><b>${t('fac.home',L.length)}</b><b>${dhx(L.reduce((s,f)=>s+reste(f),0))}</b></div></div>`:''})()}
-${days===null?`<div class="note">${t('bk.none')}</div>`:days>=7?`<div class="note">${t('bk.old',days)}</div>`:''}
+${bkNote(bkInfo(),true)}
 ${demo?`<div class="note ok">${t('demo.on')}</div>`:''}
 ${open.length?`<div class="card"><b>${t('todo')}</b>${open.slice(0,3).map(x=>`<div class="row"><span>${esc(x.texte)}</span><button class="sec" data-tk="${x.id}" style="min-height:40px">${t('done')}</button></div>`).join('')}${open.length>3?`<span class="mute">${t('more_n',open.length-3)}</span>`:''}</div>`:''}
 <div class="card"><b>${t('steps')}</b><ul class="steps">${[[1,t('st.vault')],[1,t('st.key')],[!!db.lastBackup,t('st.bk')],[actives.length>0,t('st.act')],[db.clients.some(c=>!c.archive),t('st.cl')],[0,t('st.next')]].map(([d,l],i)=>`<li class="${d?'done':''}"><i>${d?'✓':i+1}</i><span>${l}</span></li>`).join('')}</ul></div>`;
- $('#hl').onclick=lock;$('#qe').onclick=()=>{route.ret={tab:'home'};route.pre=null;nav('more','encform')};m.querySelectorAll('[data-tk]').forEach(b=>b.onclick=async()=>{db.taches.find(y=>y.id===b.dataset.tk).fait=true;await persist();viewApp()})}
+ $('#hl').onclick=lock;if($('#bkgo'))$('#bkgo').onclick=()=>nav('more','sav');$('#qe').onclick=()=>{route.ret={tab:'home'};route.pre=null;nav('more','encform')};m.querySelectorAll('[data-tk]').forEach(b=>b.onclick=async()=>{db.taches.find(y=>y.id===b.dataset.tk).fait=true;await persist();viewApp()})}
 function ech(m){const rows=db.params.echeances.map(e=>{const[mm,d]=e.md.split('-').map(Number);return`<div class="row"><span>${e.t} · ${t('ql.'+e.t)}</span><b>${d} ${MOIS[mm-1]}</b></div>`}).join('');m.innerHTML=`<h1>${t('ech.title')}</h1><p class="mute">${t('ech.sub',db.params.alerteJours)}</p><div class="card">${rows}</div><button id="gd">${t('dc.open')}</button>`;$('#gd').onclick=()=>nav('more','decl')}
 
 /* ---- Clients ---- */

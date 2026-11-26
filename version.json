@@ -1,1 +1,1 @@
-{"v":"1.5.3","notes":["Sécurité : l'appli se verrouille dès que tu la quittes (écran éteint ou autre application). Réglable dans Plus, Sécurité : immédiat, 1 minute ou 5 minutes.","Tes données et ton mot de passe ne sont pas modifiés."]}
+{"v":"1.5.4","notes":["Sauvegarde : rappel orange après 3 jours sans sauvegarde, rouge après 7 jours, avec un bouton « Sauvegarder maintenant ».","Le rappel s'affiche aussi sur l'écran de connexion. Tes données ne sont pas modifiées."]}

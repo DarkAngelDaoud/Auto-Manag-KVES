@@ -132,16 +132,22 @@ function viewRecovery(rk){show(`<main><h1>${t('rk.title')}</h1><p>${t('rk.text')
 <label style="flex-direction:row;align-items:center;gap:10px" class="noprint"><input type="checkbox" id="ok" style="width:22px;height:22px"> ${t('rk.ok')}</label><button id="next" class="noprint" disabled>${t('continue')}</button></main>`);
  $('#ok').onchange=e=>$('#next').disabled=!e.target.checked;$('#print').onclick=async e=>{try{await navigator.clipboard.writeText(rk);e.target.textContent=t('rk.copied')}catch{const r=document.createRange();r.selectNodeContents($('#rk'));getSelection().removeAllRanges();getSelection().addRange(r);e.target.textContent=t('rk.sel')}};$('#next').onclick=()=>{arm();viewApp()}}
 function viewLocked(){show(`<main style="gap:16px">${bigBrand()}<div class="card"><b>${t('lock.title')}</b><label>${t('lock.pw')}<input id="upw" type="password" autocomplete="current-password"></label>
-<div id="err" class="note bad" role="alert" hidden></div><button id="ugo">${t('lock.title')}</button><button class="link" id="lost">${t('lock.lost')}</button>${rstLink()?`<button class="link" id="wipe">${t('rs.lost')}</button>`:''}</div></main>`);
+<div id="err" class="note bad" role="alert" hidden></div><button id="ugo">${t('lock.title')}</button><button class="link" id="lost">${t('lock.lost')}</button>${lockBk()}${rstLink()?`<button class="link" id="wipe">${t('rs.lost')}</button>`:''}</div></main>`);
  if(rstLink())$('#wipe').onclick=()=>viewWipe(viewLocked,false);
  const go=async()=>{const b=$('#ugo');busy(b,true);try{await unlock($('#upw').value);arm();viewApp()}catch{busy(b,false);const f=$('#upw');f.value='';f.focus();err(t('lock.bad'))}};$('#ugo').onclick=go;$('#upw').onkeydown=e=>{if(e.key==='Enter')go()};
  $('#lost').onclick=()=>{show(`<main><h1>${t('rec.title')}</h1><div class="card"><label>${t('rec.key')}<input id="rkin" type="text" autocapitalize="characters" autocomplete="off"></label><label>${t('rec.new')}<input id="npw" type="password" autocomplete="new-password"></label><label>${t('rec.confirm')}<input id="npw2" type="password" autocomplete="new-password"></label>
 <div id="err" class="note bad" role="alert" hidden></div><button id="rgo">${t('rec.go')}</button><button class="link" id="back">${t('back')}</button></div></main>`);
   meter('npw');$('#back').onclick=viewLocked;$('#rgo').onclick=async e=>{const n=$('#npw').value;{const k=pwCheck(n);if(k)return err(t(k))}if(n!==$('#npw2').value)return err(t('err.pwdiff'));busy(e.target,true);try{await recover($('#rkin').value,n);arm();viewApp()}catch{busy(e.target,false);err(t('rec.bad'))}}}}
 
+// V1.5.4 : ancienneté de la dernière sauvegarde (ou du début d'utilisation si aucune)
+function bkInfo(){if(!db)return null;const ref=db.lastBackup||(db.journal&&db.journal[0]&&db.journal[0].d);if(!ref)return null;const days=Math.floor((Date.now()-new Date(ref))/DAY);return{days:Math.max(days,0),never:!db.lastBackup}}
+function bkNote(i,btn){if(!i||i.days<3)return'';const crit=i.days>=7,txt=i.never?t('bk.nev',i.days):t(crit?'bk.crit':'bk.warn',i.days);return`<div class="note ${crit?'bad':'warn'}" role="${crit?'alert':'status'}">${txt}${btn?`<button class="sec" id="bkgo" style="margin-top:8px">${t('bk.now')}</button>`:''}</div>`}
+function bkMirror(){try{const i=bkInfo();if(i)localStorage.setItem('amk.bkd',String(i.days>=0?Date.now()-i.days*DAY:Date.now()))}catch{}}
+
 async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink'].forEach(k=>localStorage.removeItem(k))}catch{}};
  if(navigator.locks)await navigator.locks.request('amk-vault',run);else await run();
  dek=null;db=null;vault=null;clearTimeout(lockTimer);location.reload()}
+const lockBk=()=>{try{const v=+localStorage.getItem('amk.bkd');if(!v)return'';const d=Math.floor((Date.now()-v)/DAY);return bkNote({days:d,never:false},false)}catch{return''}};
 const rstLink=()=>{try{return localStorage.getItem('amk.rstlink')!=='0'}catch{return true}};
 function viewWipe(back,authed){show(`<main style="gap:16px">${bigBrand()}<div class="card"><b>${t('rs.title')}</b><p>${t('rs.warn')}</p>${authed?`<button class="sec" id="rsb">${t('rs.bak')}</button><label>${t('rs.pw')}<input id="rspw" type="password" autocomplete="current-password"></label>`:''}<label>${t('rs.type',t('rs.word'))}<input id="rsw" type="text" autocomplete="off" autocapitalize="characters"></label><label style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="rsk" checked style="width:22px;height:22px"> ${t('rs.keep')}</label><div id="err" class="note bad" role="alert" hidden></div><button class="danger" id="rsgo">${t('rs.go')}</button><button class="link" id="rsno">${t('cancel')}</button></div></main>`);
  $('#rsno').onclick=back;if(authed)$('#rsb').onclick=()=>saveFile('auto-manag-kves-donnees-'+localIso()+'.json','application/json',JSON.stringify(db,null,1));
@@ -149,7 +155,7 @@ function viewWipe(back,authed){show(`<main style="gap:16px">${bigBrand()}<div cl
   if(authed){try{await unwrap($('#rspw').value,vault.pw)}catch{return err(t('sec.bad'))}}
   busy(e.target,true);try{await wipeAll($('#rsk').checked)}catch{busy(e.target,false);err(t('se.title'))}}}
 
-function viewApp(){const tabs=['home','clients','inv','ech','more'];
+function viewApp(){bkMirror();const tabs=['home','clients','inv','ech','more'];
  show(`<main id="m"></main><nav aria-label="Navigation principale">${tabs.map(k=>`<button data-tab="${k}" ${route.tab===k?'aria-current="page"':''}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[k]}</svg>${t('tab.'+k)}</button>`).join('')}</nav>`);
  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  const m=$('#m');({home,clients:clientsView,ech,more,inv:invView})[route.tab](m)}
