@@ -36,7 +36,7 @@ T('cases « Je l\'ai vérifié » seulement sur les règles à vérifier',(await
 await P.locator('[data-r]').first().check();await P.waitForFunction(()=>Object.values(db.verifie).some(Boolean));
 T('vérification enregistrée avec la date',await P.evaluate(()=>/^2026-12-10/.test(Object.values(db.verifie).find(Boolean))));
 await P.waitForSelector('[data-r]:checked');await P.locator('[data-r]:checked').first().uncheck();await P.waitForFunction(()=>!Object.values(db.verifie).some(Boolean));T('case décochable',true);
-await P.fill('#ai','2024');await P.dispatchEvent('#ai','change');await P.waitForFunction(()=>db.params.anneeInscription===2024);T('année d\'inscription enregistrée',true);
+await P.waitForTimeout(700);await P.fill('#ai','2024');await P.dispatchEvent('#ai','change');await P.waitForFunction(()=>db.params.anneeInscription===2024);T('année d\'inscription enregistrée',true);
 T('valeurs de l\'appli affichées (plafond 200 000 DH)',(await P.textContent('#m')).replace(/\s/g,' ').match(/200\D?000 DH/)!==null);
 // 5. ancien coffre : verifie ajouté par norm
 T('coffre ancien : clé verifie présente par défaut',await P.evaluate(()=>typeof norm({v:2,params:db.params}).verifie==='object'));

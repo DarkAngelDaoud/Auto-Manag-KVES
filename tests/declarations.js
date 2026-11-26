@@ -16,23 +16,23 @@ T('rappel « en retard » pour un trimestre passé avec CA non déclaré',await 
 // parcours : déclarer puis payer
 await p.click('nav [data-tab=more]');await p.click('[data-s=decl]');await p.waitForSelector('[data-y]');
 await p.click(`[data-y="${Y}"]`);
-await p.click('[data-a=declare][data-q="1"]');await p.waitForSelector('#x_d');
+await p.click('[data-a=declare][data-p="T1"]');await p.waitForSelector('#x_d');
 await p.evaluate(y=>{document.querySelector('#x_d').value=y+'-02-01'},Y);await p.click('#sv');T('déclaration avant la fin du trimestre refusée',await p.isVisible('#err'));
 await p.evaluate(y=>{document.querySelector('#x_d').value=y+'-04-10'},Y);await p.fill('#x_r','REF-1');await p.click('#sv');await p.waitForSelector('[data-a=paye]');
 T('T1 passe à « déclaré »',await p.evaluate(()=>decl(new Date().getFullYear()-1,'T1').statut==='declare'));
-await p.click('[data-a=paye][data-q="1"]');await p.waitForSelector('#x_m');T('montant payé prérempli = impôt calculé (12,35)',(await p.inputValue('#x_m'))==='12,35');
+await p.click('[data-a=paye][data-p="T1"]');await p.waitForSelector('#x_m');T('montant payé prérempli = impôt calculé (12,35)',(await p.inputValue('#x_m'))==='12,35');
 await p.evaluate(y=>{document.querySelector('#x_d').value=y+'-04-05'},Y);await p.click('#sv');T('paiement avant la déclaration refusé',await p.isVisible('#err'));
 await p.evaluate(y=>{document.querySelector('#x_d').value=y+'-04-12'},Y);await p.fill('#x_m','12,40');await p.click('#sv');await p.waitForSelector('.chip');
 T('T1 payé 12,40 (différent du calculé, accepté)',await p.evaluate(()=>{const d=decl(new Date().getFullYear()-1,'T1');return d.statut==='paye'&&d.montant===1240}));
 T('mention de différence affichée',(await p.textContent('#m')).includes('diffère'));
 // trimestre sans CA : déclaré = payé à 0
-await p.click('[data-a=declare][data-q="2"]');await p.waitForSelector('#x_d');await p.evaluate(y=>{document.querySelector('#x_d').value=y+'-07-10'},Y);await p.click('#sv');await p.waitForSelector('.chip');
+await p.click('[data-a=declare][data-p="T2"]');await p.waitForSelector('#x_d');await p.evaluate(y=>{document.querySelector('#x_d').value=y+'-07-10'},Y);await p.click('#sv');await p.waitForSelector('.chip');
 T('trimestre à 0 DH : directement payé',await p.evaluate(()=>{const d=decl(new Date().getFullYear()-1,'T2');return d.statut==='paye'&&d.montant===0}));
 // annuler le dernier statut
-await p.click('[data-a=undo][data-q="1"]');await p.click('#cfok');await p.waitForSelector('[data-a=paye]');
+await p.click('[data-a=undo][data-p="T1"]');await p.click('#cfok');await p.waitForSelector('[data-a=paye]');
 T('annulation : T1 revient à « déclaré »',await p.evaluate(()=>decl(new Date().getFullYear()-1,'T1').statut==='declare'));
 // récapitulatif
-await p.click('[data-a=fiche][data-q="1"]');await p.waitForSelector('.invoice');const rc=await p.textContent('.invoice');
+await p.click('[data-a=fiche][data-p="T1"]');await p.waitForSelector('.invoice');const rc=await p.textContent('.invoice');
 T('récapitulatif : CA 1234,57, impôt 12,35, ref',rc.replace(/\s/g,'').includes('1234,57DH')&&rc.replace(/\s/g,'').includes('12,35DH')&&rc.includes('REF-1'));
 // exports
 await p.evaluate(()=>nav('more','exp'));await p.click(`[data-y="${Y}"]`);
