@@ -12,8 +12,8 @@
 - Double authentification (2FA) activée sur le compte GitHub propriétaire.
 - Aucune dépendance externe : pas de CDN, pas de bibliothèque tierce dans l'application.
 
-## Signature (V2.0.0)
-Chaque fichier livré est listé avec son empreinte SHA-256 dans SIGNATURE-KVES.txt, signé en ECDSA P-256 (SIGNATURE-KVES.sig). La clé publique est dans cle-publique.js ; la clé privée reste chez le propriétaire, hors du dépôt (voir outils/LISEZ-MOI.txt). L'écran Plus > Vérifier l'application recalcule les empreintes ; la vérification automatique GitHub (outils/verifier.js) échoue si un fichier ne correspond plus. Une mise à jour mal signée est refusée par l'application installée.
+## Signature (V2.0.1)
+Chaque fichier livré est listé avec son empreinte SHA-256 dans SIGNATURE-KVES.txt, signé en Ed25519 (SIGNATURE-KVES.sig), comme Coach-Mass-KVES, avec une clé propre à Auto Manag. La clé publique est dans kves-automanag-cle-publique.txt ; la clé privée, chiffrée par une phrase secrète, reste chez le propriétaire, hors du dépôt, avec l'outil de signature privé (voir outils/LISEZ-MOI.txt). L'écran Plus > Vérifier l'application recalcule les empreintes ; la vérification automatique GitHub (outils/verifier.js) échoue si un fichier ne correspond plus. Une mise à jour mal signée, ou signée par une autre clé, est refusée par l'application installée (sauf navigateur trop ancien pour Ed25519, où la vérification est impossible et l'application fonctionne normalement).
 Limite : une application web ne peut pas, à elle seule, empêcher un attaquant qui contrôlerait tout le dépôt de publier du code (le navigateur met à jour le service worker de lui-même). La signature permet de détecter et d'alerter ; la 2FA, la protection de branche et la future version Android (APK) complètent la protection.
 
 ## Signaler un problème

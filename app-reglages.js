@@ -36,8 +36,8 @@ trad(m){const all=trRows(),bad=all.filter(x=>x.fl.length);let only=false,q='',li
  $('#trx').onclick=()=>saveFile('auto-manag-kves-traductions-'+localIso()+'.csv','text/csv;charset=utf-8',trCsv(all));draw()},
  sgn(m){m.innerHTML=`${backBtn(t('back'))}<h1>${t('more.sgn')}</h1><div class="note">${t('sg.hint')}</div><div class="card"><div id="sgs" role="status"></div><div id="sgf" class="mute"></div><button id="sgr">${t('sg.run')}</button></div><div class="card" id="sgl" hidden></div>`;wireBack(toPlus);
  const run=async()=>{const b=$('#sgr');busy(b,true);$('#sgs').className='mute';$('#sgs').textContent=t('sg.running');let r;try{r=await sigCheck(sigLocal)}catch{r={state:'badsig',items:[],bad:0,fp:'',v:'',date:''}}busy(b,false);sigRes=r;
-  const msg={none:t('sg.none'),missing:t('sg.missing'),badsig:t('sg.badsig'),tampered:t('sg.tamper',r.bad),ok:t('sg.ok',r.v,r.date,r.items.length)}[r.state];
-  $('#sgs').className='note '+(r.state==='ok'?'ok':r.state==='none'?'warn':'bad');$('#sgs').textContent=msg;$('#sgf').textContent=r.fp?t('sg.fp')+' : '+r.fp+' — '+t('sg.fpn'):'';
+  const msg={none:t('sg.none'),unsupported:t('sg.old'),missing:t('sg.missing'),badsig:t('sg.badsig'),tampered:t('sg.tamper',r.bad),ok:t('sg.ok',r.v,r.date,r.items.length)}[r.state];
+  $('#sgs').className='note '+(r.state==='ok'?'ok':(r.state==='none'||r.state==='unsupported')?'warn':'bad');$('#sgs').textContent=msg;$('#sgf').textContent=r.fp?t('sg.fp')+' : '+r.fp+' — '+t('sg.fpn'):'';
   const l=$('#sgl');l.hidden=!r.items.length;l.innerHTML=r.items.map(x=>`<div class="row"><span>${esc(x.p)}</span><b>${x.ok?'✓':'✗'}</b></div>`).join('')};
  $('#sgr').onclick=run;run()},
  sim(m){const num=v=>{const x=parseFloat(String(v).replace(/\s/g,'').replace(',','.'));return x>0?x:0},d2=x=>dh(Math.round(x*100));

@@ -227,6 +227,7 @@ LANGS.en={
 "sg.hint": "Every file of the application is signed by the owner's key. This screen recomputes the fingerprints and checks the signature. It does not replace two-factor authentication on the GitHub account.",
 "sg.run": "Check now",
 "sg.running": "Checking…",
+"sg.old": "Verification impossible: this browser is too old to check the signature. Update Chrome or Safari.",
 "sg.none": "Signature not set up on this installation: nothing to verify.",
 "sg.missing": "Signature files not found. Do not enter sensitive information and contact the owner.",
 "sg.badsig": "INVALID signature. The application does not come from the owner's key. Close it and contact the owner.",

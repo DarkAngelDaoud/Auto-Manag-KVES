@@ -1,1 +1,1 @@
-{"v":"2.0.0","notes":["Signature cryptographique : chaque fichier de l'application est couvert par une signature du propriétaire. Nouvel écran Plus > Vérifier l'application.","Une mise à jour qui n'est pas correctement signée est refusée. Tes données ne sont pas modifiées."]}
+{"v":"2.0.1","notes":["Signature alignée sur Coach-Mass-KVES : même méthode (clé Ed25519, outil privé hors ligne), clé propre à Auto Manag.","Aucun changement sur tes données ni sur ton mot de passe. Si ton navigateur est trop ancien pour la signature, l'application fonctionne normalement."]}
