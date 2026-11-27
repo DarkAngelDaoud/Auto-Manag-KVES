@@ -13,7 +13,7 @@ const defaultDb=()=>({v:2,params:JSON.parse(JSON.stringify(DONNEES.params)),
 function norm(d){const D=defaultDb();d.v=2;for(const k of Object.keys(D))if(d[k]===undefined)d[k]=D[k];for(const k of Object.keys(D.params))if(d.params[k]===undefined)d.params[k]=D.params[k];return d}
 const log=e=>db.journal.push({d:nowIso(),e});
 async function persist(creating){const run=async()=>{const cur=await kvGet('vault');if(!cur&&!creating){viewConflict();throw new Error('conflict')}if(cur){let u;try{u=JSON.parse(cur).updated}catch{}if(u!==vault.updated){viewConflict();throw new Error('conflict')}}   // une autre fenêtre a écrit entre-temps : on n'écrase jamais
- vault.data=await seal(dek,enc.encode(JSON.stringify(db)));vault.updated=nowIso();if(cur)await kvSet('vault.bak',cur);await kvSet('vault',JSON.stringify(vault))};
+ vault.data=await seal(dek,enc.encode(JSON.stringify(db)));vault.updated=nowIso();if(cur)await kvSet('vault.bak',cur);const str=JSON.stringify(vault);await kvSet('vault',str);vaultBytes=str.length};
  return navigator.locks?navigator.locks.request('amk-vault',run):run()}
 addEventListener('unhandledrejection',e=>{if(e.reason&&e.reason.message==='conflict')e.preventDefault()});
 async function setup(pw){if(await getVault())throw new Error('exists');const raw=crypto.getRandomValues(new Uint8Array(32)),rk=newRk();vault={v:1,app:'KVES',pw:await wrap(pw,PW_ITER,raw),rk:await wrap(normRk(rk),RK_ITER,raw)};dek=await importDek(raw);db=defaultDb();await persist(true);return rk}
@@ -184,6 +184,25 @@ function legalAlerts(now=new Date()){const Y=now.getFullYear(),o=[],p=db.params;
  return o}
 const legalNotes=()=>legalAlerts().map(x=>`<div class="note ${x.cls}" role="${x.cls==='bad'?'alert':'status'}">${t(x.k,...x.a)}</div>`).join('');
 
+// V1.7.2 : santé du coffre (taille, copie de secours, contrôle d'intégrité des données)
+let vaultBytes=0,intKey='',intRes=[];
+const SIZE_WARN=8*1048576,fmtBytes=n=>n<1048576?Math.max(1,Math.round(n/1024))+' '+t('u.ko'):(n/1048576).toFixed(1)+' '+t('u.mo');
+function integrity(){const o=[],D=db,isD=x=>typeof x==='string'&&/^\d{4}-\d\d-\d\d/.test(x)&&!isNaN(pd(x));
+ for(const k of ['clients','documents','encaissements','depenses','declarations','activites','taches']){if(!Array.isArray(D[k])){o.push({k:'ig.arr',a:[k]});continue}const ids=new Set();let dup=0;for(const x of D[k]){if(!x||typeof x!=='object'){dup++;continue}if(ids.has(x.id))dup++;ids.add(x.id)}if(dup)o.push({k:'ig.dupid',a:[k,dup]})}
+ if(!Array.isArray(D.documents)||!Array.isArray(D.encaissements)||!Array.isArray(D.depenses)||!Array.isArray(D.declarations))return o;
+ let badL=0,badA=0,badD=0;const nums=new Map(),docIds=new Set(D.documents.map(x=>x.id));
+ for(const f of D.documents){if(f.type==='facture'){nums.set(f.numero,(nums.get(f.numero)||0)+1);const s=(f.lignes||[]).reduce((a,x)=>a+lineCts(x.qm,x.p),0);if(s!==f.total)o.push({k:'ig.tot',a:[f.numero]});if(!isD(f.date))badD++;if(f.ent&&f.ent.logoId&&!(D.logos||{})[f.ent.logoId])o.push({k:'ig.logo',a:[f.numero]})}}
+ for(const[n,c]of nums)if(c>1)o.push({k:'ig.num',a:[n]});
+ for(const e of D.encaissements){if(e.factureId&&!docIds.has(e.factureId))badL++;if(!Number.isSafeInteger(e.montant)||e.montant<=0)badA++;if(!isD(e.date))badD++}
+ for(const e of D.depenses){if(!Number.isSafeInteger(e.montant)||e.montant<=0)badA++;if(!isD(e.date))badD++}
+ if(badL)o.push({k:'ig.link',a:[badL]});if(badA)o.push({k:'ig.amt',a:[badA]});if(badD)o.push({k:'ig.date',a:[badD]});
+ const dk=new Set();for(const r of D.declarations){const k=r.annee+'|'+r.t;if(dk.has(k))o.push({k:'ig.decl',a:[r.t+' '+r.annee]});dk.add(k)}
+ if(D.entreprise&&D.entreprise.logoId&&!(D.logos||{})[D.entreprise.logoId])o.push({k:'ig.logo',a:['—']});
+ return o}
+const integ=()=>{if(intKey!==vault.updated){intRes=integrity();intKey=vault.updated}return intRes};
+async function bakCheck(){try{const b=await kvGet('vault.bak');if(!b)return'hl.bak.none';const v=JSON.parse(b);await open(dek,v.data);return'hl.bak.ok'}catch{return'hl.bak.bad'}}
+const healthNotes=()=>{const o=[],r=integ();if(r.length)o.push(`<div class="note warn" role="status">${t('hl.home',r.length)}</div>`);if(vaultBytes>SIZE_WARN)o.push(`<div class="note warn" role="status">${t('hl.big',fmtBytes(vaultBytes))}</div>`);return o.join('')};
+
 async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink'].forEach(k=>localStorage.removeItem(k))}catch{}};
  if(navigator.locks)await navigator.locks.request('amk-vault',run);else await run();
  dek=null;db=null;vault=null;clearTimeout(lockTimer);location.reload()}
@@ -195,7 +214,7 @@ function viewWipe(back,authed){show(`<main style="gap:16px">${bigBrand()}<div cl
   if(authed){try{await unwrap($('#rspw').value,vault.pw)}catch{return err(t('sec.bad'))}}
   busy(e.target,true);try{await wipeAll($('#rsk').checked)}catch{busy(e.target,false);err(t('se.title'))}}}
 
-function viewApp(){bkMirror();const tabs=['home','clients','inv','ech','more'];
+function viewApp(){bkMirror();kvGet('vault').then(x=>{vaultBytes=x?x.length:0}).catch(()=>{});const tabs=['home','clients','inv','ech','more'];
  show(`<main id="m"></main><nav aria-label="Navigation principale">${tabs.map(k=>`<button data-tab="${k}" ${route.tab===k?'aria-current="page"':''}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[k]}</svg>${t('tab.'+k)}</button>`).join('')}</nav>`);
  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  const m=$('#m');({home,clients:clientsView,ech,more,inv:invView})[route.tab](m)}

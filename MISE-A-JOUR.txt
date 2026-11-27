@@ -1,6 +1,7 @@
 Auto Manag KVES · signé KVES · historique des versions
 (Procédure : une modification par version. Mettre à jour le numéro dans donnees.js, sw.js, version.json et index.html, ajouter une ligne ici, puis déposer les fichiers dans le dépôt.)
 
+V1.7.2  Santé du coffre : taille, copie de secours, contrôle d'intégrité
 V1.7.1  Option de déclaration mensuelle ou trimestrielle
 V1.7.0  Conformité : alertes de radiation et références légales
 V1.6.2  Logo, couleur et nouveau modèle de facture
