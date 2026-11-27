@@ -223,7 +223,7 @@ function integrity(){const o=[],D=db,isD=x=>typeof x==='string'&&/^\d{4}-\d\d-\d
 const integ=()=>{if(intKey!==vault.updated){intRes=integrity();intKey=vault.updated}return intRes};
 async function bakCheck(){try{const b=await kvGet('vault.bak');if(!b)return'hl.bak.none';const v=JSON.parse(b);await open(dek,v.data);return'hl.bak.ok'}catch{return'hl.bak.bad'}}
 const iosWeb=()=>{try{return(/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))&&!navigator.standalone&&!matchMedia('(display-mode: standalone)').matches}catch{return false}};
-const healthNotes=()=>{const o=[],r=integ();if(iosWeb())o.push(`<div class="note warn" role="status">${t('ios.hint')}</div>`);if(r.length)o.push(`<div class="note warn" role="status">${t('hl.home',r.length)}</div>`);if(vaultBytes>SIZE_WARN)o.push(`<div class="note warn" role="status">${t('hl.big',fmtBytes(vaultBytes))}</div>`);return o.join('')};
+const healthNotes=()=>{const o=[],r=integ();if(sigRes&&['badsig','tampered','missing'].includes(sigRes.state))o.push(`<div class="note bad" role="alert">${t('sg.home')}</div>`);if(iosWeb())o.push(`<div class="note warn" role="status">${t('ios.hint')}</div>`);if(r.length)o.push(`<div class="note warn" role="status">${t('hl.home',r.length)}</div>`);if(vaultBytes>SIZE_WARN)o.push(`<div class="note warn" role="status">${t('hl.big',fmtBytes(vaultBytes))}</div>`);return o.join('')};
 
 async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink','amk.fail'].forEach(k=>localStorage.removeItem(k))}catch{}};
  if(navigator.locks)await navigator.locks.request('amk-vault',run);else await run();
@@ -236,7 +236,7 @@ function viewWipe(back,authed){show(`<main class="u9">${bigBrand()}<div class="c
   if(authed){try{await unwrap($('#rspw').value,vault.pw)}catch{return err(t('sec.bad'))}}
   busy(e.target,true);try{await wipeAll($('#rsk').checked)}catch{busy(e.target,false);err(t('se.title'))}}}
 
-function viewApp(){bkMirror();kvGet('vault').then(x=>{vaultBytes=x?x.length:0}).catch(()=>{});const tabs=['home','clients','inv','ech','more'];
+function viewApp(){bkMirror();sigCheck(sigLocal).then(r=>{sigRes=r;if(['badsig','tampered','missing'].includes(r.state)&&!route.sub&&route.tab==='home')nav('home')}).catch(()=>{});kvGet('vault').then(x=>{vaultBytes=x?x.length:0}).catch(()=>{});const tabs=['home','clients','inv','ech','more'];
  show(`<main id="m"></main><nav aria-label="Navigation principale">${tabs.map(k=>`<button data-tab="${k}" ${route.tab===k?'aria-current="page"':''}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[k]}</svg>${t('tab.'+k)}</button>`).join('')}</nav>`);
  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>nav(b.dataset.tab));
  const m=$('#m');({home,clients:clientsView,ech,more,inv:invView})[route.tab](m)}

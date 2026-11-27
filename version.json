@@ -1,1 +1,1 @@
-{"v":"1.8.3","notes":["Sécurité : la politique de contenu n'autorise plus aucun style en ligne. Les styles sont désormais dans la feuille de style.","L'apparence est identique. Tes données ne sont pas modifiées."]}
+{"v":"2.0.0","notes":["Signature cryptographique : chaque fichier de l'application est couvert par une signature du propriétaire. Nouvel écran Plus > Vérifier l'application.","Une mise à jour qui n'est pas correctement signée est refusée. Tes données ne sont pas modifiées."]}

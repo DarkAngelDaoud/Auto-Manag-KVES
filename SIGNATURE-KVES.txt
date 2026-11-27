@@ -1,0 +1,1 @@
+NON SIGNE : lance  node outils/signer.js  (voir outils/LISEZ-MOI.txt)
