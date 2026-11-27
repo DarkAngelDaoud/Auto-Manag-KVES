@@ -17,7 +17,7 @@ jobs:
       - name: Installer les outils de test
         working-directory: tests
         run: |
-          npm install
+          npm ci
           npx playwright install --with-deps chromium
       - name: Lancer les tests
         working-directory: tests
