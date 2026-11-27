@@ -60,7 +60,7 @@ ${info?`<div class="card">${info}</div>`:''}<button id="ne">${t('cl.enc')}</butt
 
 /* ---- Plus ---- */
 function more(m){if(route.sub)return subs[route.sub](m);
- m.innerHTML=`<h1>${t('tab.more')}</h1><div class="card">${['enc','dep','decl','exp','ent','act','aff','loi','sim','regles','sec','sav','demo'].map(k=>`<button class="link" style="justify-content:space-between;border-top:1px solid var(--line);border-radius:0;width:100%" data-s="${k}">${t('more.'+k)}<span>›</span></button>`).join('')}</div>${upd.p?`<button id="upl">${t('more.upd',upd.p.v)}</button>`:''}<button class="sec" id="lk">${t('lock.now2')}</button><p class="mute" style="text-align:center">${t('more.ver',APP_VERSION)}</p>`;
+ m.innerHTML=`<h1>${t('tab.more')}</h1><div class="card">${['enc','dep','decl','exp','ent','act','aff','loi','sim','trad','regles','sec','sav','demo'].map(k=>`<button class="link" style="justify-content:space-between;border-top:1px solid var(--line);border-radius:0;width:100%" data-s="${k}">${t('more.'+k)}<span>›</span></button>`).join('')}</div>${upd.p?`<button id="upl">${t('more.upd',upd.p.v)}</button>`:''}<button class="sec" id="lk">${t('lock.now2')}</button><p class="mute" style="text-align:center">${t('more.ver',APP_VERSION)}</p>`;
  if(upd.p)$('#upl').onclick=()=>updStep(2);m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>nav('more',b.dataset.s));$('#lk').onclick=lock}
 const toPlus=()=>nav('more');
 const retGo=()=>{const r=route.ret||{tab:'more',sub:'enc'};route.ret=null;route.pre=null;nav(r.tab,r.sub,r.arg)};

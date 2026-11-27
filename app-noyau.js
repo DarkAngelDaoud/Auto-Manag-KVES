@@ -184,6 +184,16 @@ function legalAlerts(now=new Date()){const Y=now.getFullYear(),o=[],p=db.params;
  return o}
 const legalNotes=()=>legalAlerts().map(x=>`<div class="note ${x.cls}" role="${x.cls==='bad'?'alert':'status'}">${t(x.k,...x.a)}</div>`).join('');
 
+// V1.8.0 : relecture des traductions (comparaison fr / en / ar, alertes automatiques, export CSV pour un relecteur)
+const trRows=()=>{const F=LANGS.fr,E=LANGS.en||{},A=LANGS.ar||{},vars=s=>(String(s).match(/\{\d+\}/g)||[]).sort().join(),hasAr=s=>/[\u0600-\u06FF]/.test(s),hasLt=s=>/[A-Za-zÀ-ÿ]{3,}/.test(s),rows=[];
+ for(const k of Object.keys(F)){const fr=F[k];if(typeof fr!=='string')continue;const en=E[k],ar=A[k],fl=[];
+  if(typeof en!=='string')fl.push('en absent');if(typeof ar!=='string')fl.push('ar absent');
+  if(typeof en==='string'){if(vars(en)!==vars(fr))fl.push('variables en');if(en===fr&&hasLt(fr)&&fr.length>12)fl.push('en identique au fr');if(fr.length>25&&(en.length>fr.length*2.2||en.length<fr.length*.3))fl.push('longueur en')}
+  if(typeof ar==='string'){if(vars(ar)!==vars(fr))fl.push('variables ar');if(hasLt(fr)&&!hasAr(ar)&&fr.length>12)fl.push('ar sans arabe');if(fr.length>25&&(ar.length>fr.length*2.2||ar.length<fr.length*.3))fl.push('longueur ar')}
+  rows.push({k,fr,en:en||'',ar:ar||'',fl})}
+ return rows};
+const trCsv=rows=>{const q=s=>'"'+String(s).replace(/"/g,'""')+'"';return '\ufeff'+['cle','fr','en','ar','alertes','statut_relecture','commentaire'].join(';')+'\r\n'+rows.map(r=>[q(r.k),q(r.fr),q(r.en),q(r.ar),q(r.fl.join(', ')),q(''),q('')].join(';')).join('\r\n')};
+
 // V1.7.5 : simulateur impôt + droit complémentaire (CGI 73-II-B-6° ; décret 2-21-928). Estimation : tranche d'après l'impôt du trimestre x 4
 const DC_GRID=[[499.99,300],[1000,390],[2500,570],[5000,720],[10000,1050],[25000,1500],[50000,2250],[Infinity,3600]];
 const dcOf=annual=>{for(const[u,v]of DC_GRID)if(annual<=u)return v;return 3600};

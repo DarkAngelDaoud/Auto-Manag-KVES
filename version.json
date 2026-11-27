@@ -1,1 +1,1 @@
-{"v":"1.7.5","notes":["Plus : nouveau Simulateur impôt + cotisation. Il estime, pour un trimestre, l'impôt, le droit complémentaire, ce qui te reste et le chiffre d'affaires minimum à encaisser pour un net voulu.","C'est une estimation, rien n'est enregistré."]}
+{"v":"1.8.0","notes":["Plus : nouvelle Relecture des traductions. Elle compare le français, l'anglais et l'arabe, signale automatiquement les textes douteux et exporte un tableau CSV à donner à un relecteur.","Aucune donnée n'est modifiée."]}
