@@ -1,6 +1,6 @@
 'use strict';
 /* Auto Manag KVES · signé KVES · constantes et règles légales par défaut (modifiables dans l'application : Plus, Règles légales). Règles légales en DH ; montants des opérations en centimes. */
-const APP_VERSION='1.7.2',PW_ITER=600000,RK_ITER=100000,AUTOLOCK_MS=5*60*1000,DAY=864e5;
+const APP_VERSION='1.7.3',PW_ITER=600000,RK_ITER=100000,AUTOLOCK_MS=5*60*1000,DAY=864e5;
 const DONNEES={params:{taux:1,plafond:200000,tauxCommerce:0.5,plafondCommerce:500000,alerte:80,seuilClient:80000,retenue:30,penalite:100,alerteJours:7,periodicite:'T',
  echeances:[{t:'T1',l:'Janvier à mars',md:'04-30'},{t:'T2',l:'Avril à juin',md:'07-31'},{t:'T3',l:'Juillet à septembre',md:'10-31'},{t:'T4',l:'Octobre à décembre',md:'01-31'}]}};
 
@@ -16,7 +16,9 @@ const REGLES=[
 {id:'cpt',ok:1,t:"Dispense de comptabilité commerciale et d'inscription au registre du commerce.",s:'Loi 114-13, art. 2'},
 {id:'f145',ok:1,t:"Les règles de comptabilité de l'article 145 du CGI ne s'appliquent pas à l'auto-entrepreneur, sous réserve de l'obligation prévue à l'article 145-X (adresse e-mail).",s:'CGI, art. 145-X et 145-XI'},
 {id:'act',ok:1,t:"Activités autorisées : tes trois activités figurent dans la liste des prestations de services. Sont exclus : bureau d'études, marchand de biens immobiliers, promoteur et lotisseur. Ton libellé doit rester clairement une prestation de service.",s:'Décret 2-15-303 du 30 décembre 2015'},
-{id:'pen',ok:0,t:"Pénalité en cas de déclaration tardive : 100 DH minimum. Montant utilisé par l'appli, mais non retrouvé dans les textes fournis.",v:p=>dhp(p.penalite),s:"Non confirmé"},
+{id:'pen',ok:1,t:"Déclaration du chiffre d'affaires en retard ou absente : la majoration ne peut pas être inférieure à 100 DH. Une déclaration incomplète ou insuffisante est punie d'une amende de 100 DH.",v:p=>dhp(p.penalite),s:'CGI, art. 184 (texte 2026)'},
+{id:'maj',ok:1,t:"Majoration sur les droits dus : 5 % si la déclaration est déposée avec 30 jours de retard au plus, 15 % au-delà, 20 % en cas d'imposition d'office (défaut de déclaration, déclaration incomplète ou insuffisante). Exemple : impôt de 600 DH déposé avec 10 jours de retard, 5 % = 30 DH, donc le minimum de 100 DH s'applique.",s:'CGI, art. 184'},
+{id:'pay',ok:1,t:"Paiement de l'impôt en retard : pénalité de 10 % (5 % si le retard ne dépasse pas 30 jours), plus une majoration de 5 % pour le premier mois de retard et de 0,5 % par mois ou fraction de mois supplémentaire.",s:'CGI, art. 208-I'},
 {id:'cs',ok:0,t:"Cotisation sociale (CNSS / AMO) à verser avec l'impôt : montants et échéances non fournis dans les textes. L'appli ne la calcule pas.",s:'Loi 114-13, art. 6 ; montants à obtenir'},
 {id:'dcx',ok:0,t:"Droit complémentaire : le CGI y renvoie « selon des modalités réglementaires » qui ne figurent pas dans les textes fournis. L'appli ne l'ajoute pas.",s:'CGI, art. 73-II-B-6° ; modalités à obtenir'},
 {id:'ice',ok:0,t:"ICE exigé sur tes factures : bonne pratique, mais l'obligation exacte pour un auto-entrepreneur n'est pas confirmée par les textes fournis.",s:'À vérifier'},
