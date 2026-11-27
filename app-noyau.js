@@ -184,6 +184,14 @@ function legalAlerts(now=new Date()){const Y=now.getFullYear(),o=[],p=db.params;
  return o}
 const legalNotes=()=>legalAlerts().map(x=>`<div class="note ${x.cls}" role="${x.cls==='bad'?'alert':'status'}">${t(x.k,...x.a)}</div>`).join('');
 
+// V1.7.5 : simulateur impôt + droit complémentaire (CGI 73-II-B-6° ; décret 2-21-928). Estimation : tranche d'après l'impôt du trimestre x 4
+const DC_GRID=[[499.99,300],[1000,390],[2500,570],[5000,720],[10000,1050],[25000,1500],[50000,2250],[Infinity,3600]];
+const dcOf=annual=>{for(const[u,v]of DC_GRID)if(annual<=u)return v;return 3600};
+const simRate=cat=>(cat==='commerce'?db.params.tauxCommerce:db.params.taux)/100;
+const simCalc=(ca,cat)=>{const imp=Math.round(ca*simRate(cat)*100)/100,dc=dcOf(imp*4);return{imp,dc,tot:imp+dc,net:ca-imp-dc}};
+const simMin=(net,cat)=>{if(!(net>0))return 0;const lim=Math.ceil(net*3+20000);for(let ca=Math.ceil(net);ca<=lim;ca++)if(simCalc(ca,cat).net>=net)return ca;return 0};
+const simSteps=cat=>{const r=simRate(cat),out=[];let lo=0;DC_GRID.forEach(([u,v],i)=>{const from=i===0?0:Math.ceil(lo/4/r);out.push({from,dc:v});lo=u<1e9?(i===0?500:u):lo});return out};
+
 // V1.7.2 : santé du coffre (taille, copie de secours, contrôle d'intégrité des données)
 let vaultBytes=0,intKey='',intRes=[];
 const SIZE_WARN=8*1048576,fmtBytes=n=>n<1048576?Math.max(1,Math.round(n/1024))+' '+t('u.ko'):(n/1048576).toFixed(1)+' '+t('u.mo');
