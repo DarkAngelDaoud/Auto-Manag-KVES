@@ -1,1 +1,1 @@
-{"v":"1.8.0","notes":["Plus : nouvelle Relecture des traductions. Elle compare le français, l'anglais et l'arabe, signale automatiquement les textes douteux et exporte un tableau CSV à donner à un relecteur.","Aucune donnée n'est modifiée."]}
+{"v":"1.8.1","notes":["Sécurité : après 5 mots de passe faux, un délai croissant s'applique avant de pouvoir réessayer. L'application refuse de s'afficher dans un cadre externe.","Un rappel s'affiche sur iPhone et iPad si l'appli n'est pas installée sur l'écran d'accueil. Tes données ne sont pas modifiées."]}

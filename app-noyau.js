@@ -18,8 +18,11 @@ async function persist(creating){const run=async()=>{const cur=await kvGet('vaul
 addEventListener('unhandledrejection',e=>{if(e.reason&&e.reason.message==='conflict')e.preventDefault()});
 async function setup(pw){if(await getVault())throw new Error('exists');const raw=crypto.getRandomValues(new Uint8Array(32)),rk=newRk();vault={v:1,app:'KVES',pw:await wrap(pw,PW_ITER,raw),rk:await wrap(normRk(rk),RK_ITER,raw)};dek=await importDek(raw);db=defaultDb();await persist(true);return rk}
 async function load(v,raw){vault=v;dek=await importDek(raw);db=norm(JSON.parse(dec.decode(await open(dek,v.data))));}
-async function unlock(pw){const v=JSON.parse(await getVault());await load(v,await unwrap(pw,v.pw))}
-async function recover(rk,npw){const v=JSON.parse(await getVault()),raw=await unwrap(normRk(rk),v.rk);await load(v,raw);vault.pw=await wrap(npw,PW_ITER,raw);log(t('log.pwr'));await persist()}
+// V1.8.1 : délai croissant après 5 échecs (protection contre l'essai à la main ; le coût PBKDF2 reste la vraie barrière)
+const FAIL_KEY='amk.fail',failGet=()=>{try{const o=JSON.parse(localStorage.getItem(FAIL_KEY));return o&&o.n>=0?o:{n:0,u:0}}catch{return{n:0,u:0}}},failWait=()=>Math.max(0,Math.ceil((failGet().u-Date.now())/1000)),
+ failAdd=()=>{const o=failGet();o.n++;o.u=o.n>=5?Date.now()+Math.min(900,30*2**(o.n-5))*1000:0;try{localStorage.setItem(FAIL_KEY,JSON.stringify(o))}catch{}},failClr=()=>{try{localStorage.removeItem(FAIL_KEY)}catch{}};
+async function unlock(pw){const w=failWait();if(w)throw{wait:w};const v=JSON.parse(await getVault());try{await load(v,await unwrap(pw,v.pw))}catch(e){failAdd();throw e}failClr()}
+async function recover(rk,npw){const w=failWait();if(w)throw{wait:w};const v=JSON.parse(await getVault());let raw;try{raw=await unwrap(normRk(rk),v.rk);await load(v,raw)}catch(e){failAdd();throw e}failClr();vault.pw=await wrap(npw,PW_ITER,raw);log(t('log.pwr'));await persist()}
 async function changePw(old,npw){const raw=await unwrap(old,vault.pw);vault.pw=await wrap(npw,PW_ITER,raw);log(t('log.pw'));await persist()}
 function lock(){dek=null;db=null;vault=null;clearTimeout(lockTimer);route.tab='home';route.sub=null;route.arg=null;boot()}
 function arm(){clearTimeout(lockTimer);if(db)lockTimer=setTimeout(lock,AUTOLOCK_MS)}
@@ -146,10 +149,10 @@ function viewRecovery(rk){show(`<main><h1>${t('rk.title')}</h1><p>${t('rk.text')
 function viewLocked(){show(`<main style="gap:16px">${bigBrand()}<div class="card"><b>${t('lock.title')}</b><label>${t('lock.pw')}<input id="upw" type="password" autocomplete="current-password"></label>
 <div id="err" class="note bad" role="alert" hidden></div><button id="ugo">${t('lock.title')}</button><button class="link" id="lost">${t('lock.lost')}</button>${lockBk()}${rstLink()?`<button class="link" id="wipe">${t('rs.lost')}</button>`:''}</div></main>`);
  if(rstLink())$('#wipe').onclick=()=>viewWipe(viewLocked,false);
- const go=async()=>{const b=$('#ugo');busy(b,true);try{await unlock($('#upw').value);arm();viewApp()}catch{busy(b,false);const f=$('#upw');f.value='';f.focus();err(t('lock.bad'))}};$('#ugo').onclick=go;$('#upw').onkeydown=e=>{if(e.key==='Enter')go()};
+ const go=async()=>{const b=$('#ugo');busy(b,true);try{await unlock($('#upw').value);arm();viewApp()}catch(e){busy(b,false);const f=$('#upw');f.value='';f.focus();err(e&&e.wait?t('lock.wait',e.wait):t('lock.bad'))}};$('#ugo').onclick=go;$('#upw').onkeydown=e=>{if(e.key==='Enter')go()};
  $('#lost').onclick=()=>{show(`<main><h1>${t('rec.title')}</h1><div class="card"><label>${t('rec.key')}<input id="rkin" type="text" autocapitalize="characters" autocomplete="off"></label><label>${t('rec.new')}<input id="npw" type="password" autocomplete="new-password"></label><label>${t('rec.confirm')}<input id="npw2" type="password" autocomplete="new-password"></label>
 <div id="err" class="note bad" role="alert" hidden></div><button id="rgo">${t('rec.go')}</button><button class="link" id="back">${t('back')}</button></div></main>`);
-  meter('npw');$('#back').onclick=viewLocked;$('#rgo').onclick=async e=>{const n=$('#npw').value;{const k=pwCheck(n);if(k)return err(t(k))}if(n!==$('#npw2').value)return err(t('err.pwdiff'));busy(e.target,true);try{await recover($('#rkin').value,n);arm();viewApp()}catch{busy(e.target,false);err(t('rec.bad'))}}}}
+  meter('npw');$('#back').onclick=viewLocked;$('#rgo').onclick=async e=>{const n=$('#npw').value;{const k=pwCheck(n);if(k)return err(t(k))}if(n!==$('#npw2').value)return err(t('err.pwdiff'));busy(e.target,true);try{await recover($('#rkin').value,n);arm();viewApp()}catch(x){busy(e.target,false);err(x&&x.wait?t('lock.wait',x.wait):t('rec.bad'))}}}}
 
 // V1.5.4 : ancienneté de la dernière sauvegarde (ou du début d'utilisation si aucune)
 function bkInfo(){if(!db)return null;const ref=db.lastBackup||(db.journal&&db.journal[0]&&db.journal[0].d);if(!ref)return null;const days=Math.floor((Date.now()-new Date(ref))/DAY);return{days:Math.max(days,0),never:!db.lastBackup}}
@@ -219,9 +222,10 @@ function integrity(){const o=[],D=db,isD=x=>typeof x==='string'&&/^\d{4}-\d\d-\d
  return o}
 const integ=()=>{if(intKey!==vault.updated){intRes=integrity();intKey=vault.updated}return intRes};
 async function bakCheck(){try{const b=await kvGet('vault.bak');if(!b)return'hl.bak.none';const v=JSON.parse(b);await open(dek,v.data);return'hl.bak.ok'}catch{return'hl.bak.bad'}}
-const healthNotes=()=>{const o=[],r=integ();if(r.length)o.push(`<div class="note warn" role="status">${t('hl.home',r.length)}</div>`);if(vaultBytes>SIZE_WARN)o.push(`<div class="note warn" role="status">${t('hl.big',fmtBytes(vaultBytes))}</div>`);return o.join('')};
+const iosWeb=()=>{try{return(/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))&&!navigator.standalone&&!matchMedia('(display-mode: standalone)').matches}catch{return false}};
+const healthNotes=()=>{const o=[],r=integ();if(iosWeb())o.push(`<div class="note warn" role="status">${t('ios.hint')}</div>`);if(r.length)o.push(`<div class="note warn" role="status">${t('hl.home',r.length)}</div>`);if(vaultBytes>SIZE_WARN)o.push(`<div class="note warn" role="status">${t('hl.big',fmtBytes(vaultBytes))}</div>`);return o.join('')};
 
-async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink'].forEach(k=>localStorage.removeItem(k))}catch{}};
+async function wipeAll(keep){const run=async()=>{await kvClear();if(!keep)try{['amk.theme','amk.lang','amk.rstlink','amk.fail'].forEach(k=>localStorage.removeItem(k))}catch{}};
  if(navigator.locks)await navigator.locks.request('amk-vault',run);else await run();
  dek=null;db=null;vault=null;clearTimeout(lockTimer);location.reload()}
 const lockBk=()=>{try{const v=+localStorage.getItem('amk.bkd');if(!v)return'';const d=Math.floor((Date.now()-v)/DAY);return bkNote({days:d,never:false},false)}catch{return''}};

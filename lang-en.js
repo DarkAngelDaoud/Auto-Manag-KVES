@@ -221,6 +221,8 @@ LANGS.en={
 "tr.q": "Search",
 "tr.more": "Show more",
 "tr.none": "No text to show.",
+"lock.wait": "Too many attempts. Try again in {0} seconds.",
+"ios.hint": "On iPhone or iPad, install the app on the home screen (Share, then Add to Home Screen). Safari may erase the data of a non-installed site after 7 days without a visit. Also make regular backups.",
 "sec.note": "Automatic lock after 5 minutes of inactivity. The recovery key stays valid.",
 "sav.title": "Backup",
 "sav.warn": "Data is stored in this browser, which can erase it (cleaning, uninstalling). Export an encrypted backup regularly and keep it off your phone.",
