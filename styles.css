@@ -103,3 +103,29 @@ nav button[aria-current=page] svg{background:var(--tint)}
 .logobox{align-self:center;box-shadow:var(--sh);border-radius:20px;padding:18px 22px}
 @media print{.card,.item,.hero{box-shadow:none!important}.hero::after{display:none}nav{box-shadow:none}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* V1.8.3 · classes remplaçant les styles en ligne (CSP stricte) */
+.u1{border-radius:22px}
+.u2{align-self:flex-start}
+.u3{min-height:44px}
+.u4{min-height:40px}
+.u5{margin-top:8px}
+.u6{letter-spacing:.12em;font-weight:600}
+.u7{flex:none}
+.u8{justify-content:flex-start}
+.u9{gap:16px}
+.u10{flex-direction:row;align-items:center;gap:10px}
+.u11{width:22px;height:22px}
+.u12{max-width:240px;max-height:100px;align-self:flex-start;border:1px solid var(--line);border-radius:8px;background:#fff;padding:6px}
+.u13{font-size:13px}
+.u14{font-size:12px;direction:ltr;text-align:left}
+.u15{flex-direction:row;align-items:center;gap:10px;font-weight:400}
+.u16{flex-direction:row;justify-content:space-between;align-items:center;width:100%;font-weight:400}
+.u17{display:flex;flex-direction:column;gap:8px}
+.u18{margin:0;padding-inline-start:18px}
+.u19{display:flex;flex-direction:column;gap:4px;min-width:0}
+.u20{font-size:18px}
+.u21{cursor:default}
+.u22{justify-content:space-between;border-top:1px solid var(--line);border-radius:0;width:100%}
+.u23{text-align:center}
+[hidden]{display:none!important}
