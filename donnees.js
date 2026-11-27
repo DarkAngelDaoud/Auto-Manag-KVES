@@ -1,6 +1,6 @@
 'use strict';
 /* Auto Manag KVES · signé KVES · constantes et règles légales par défaut (modifiables dans l'application : Plus, Règles légales). Règles légales en DH ; montants des opérations en centimes. */
-const APP_VERSION='1.7.3',PW_ITER=600000,RK_ITER=100000,AUTOLOCK_MS=5*60*1000,DAY=864e5;
+const APP_VERSION='1.7.4',PW_ITER=600000,RK_ITER=100000,AUTOLOCK_MS=5*60*1000,DAY=864e5;
 const DONNEES={params:{taux:1,plafond:200000,tauxCommerce:0.5,plafondCommerce:500000,alerte:80,seuilClient:80000,retenue:30,penalite:100,alerteJours:7,periodicite:'T',
  echeances:[{t:'T1',l:'Janvier à mars',md:'04-30'},{t:'T2',l:'Avril à juin',md:'07-31'},{t:'T3',l:'Juillet à septembre',md:'10-31'},{t:'T4',l:'Octobre à décembre',md:'01-31'}]}};
 
@@ -19,8 +19,12 @@ const REGLES=[
 {id:'pen',ok:1,t:"Déclaration du chiffre d'affaires en retard ou absente : la majoration ne peut pas être inférieure à 100 DH. Une déclaration incomplète ou insuffisante est punie d'une amende de 100 DH.",v:p=>dhp(p.penalite),s:'CGI, art. 184 (texte 2026)'},
 {id:'maj',ok:1,t:"Majoration sur les droits dus : 5 % si la déclaration est déposée avec 30 jours de retard au plus, 15 % au-delà, 20 % en cas d'imposition d'office (défaut de déclaration, déclaration incomplète ou insuffisante). Exemple : impôt de 600 DH déposé avec 10 jours de retard, 5 % = 30 DH, donc le minimum de 100 DH s'applique.",s:'CGI, art. 184'},
 {id:'pay',ok:1,t:"Paiement de l'impôt en retard : pénalité de 10 % (5 % si le retard ne dépasse pas 30 jours), plus une majoration de 5 % pour le premier mois de retard et de 0,5 % par mois ou fraction de mois supplémentaire.",s:'CGI, art. 208-I'},
-{id:'cs',ok:0,t:"Cotisation sociale (CNSS / AMO) à verser avec l'impôt : montants et échéances non fournis dans les textes. L'appli ne la calcule pas.",s:'Loi 114-13, art. 6 ; montants à obtenir'},
-{id:'dcx',ok:0,t:"Droit complémentaire : le CGI y renvoie « selon des modalités réglementaires » qui ne figurent pas dans les textes fournis. L'appli ne l'ajoute pas.",s:'CGI, art. 73-II-B-6° ; modalités à obtenir'},
+{id:'dcx',ok:1,t:"Droit complémentaire (base de la cotisation d'assurance maladie). Montant par trimestre selon tes droits annuels d'impôt : moins de 500 DH → 300 ; 500 à 1 000 → 390 ; 1 001 à 2 500 → 570 ; 2 501 à 5 000 → 720 ; 5 001 à 10 000 → 1 050 ; 10 001 à 25 000 → 1 500 ; 25 001 à 50 000 → 2 250 ; plus de 50 000 → 3 600 (DH par trimestre). Comment la tranche est retenue en cours d'année : à confirmer auprès de ton guichet.",s:'CGI, art. 73-II-B-6° et 73-III ; décret 2-21-928, art. 3 et 4'},
+{id:'cs',ok:1,t:"Cotisation sociale : l'affiliation est obligatoire. La cotisation d'assurance maladie est calculée sur le droit complémentaire. La cotisation retraite s'obtient en appliquant un coefficient de 1,57 à la cotisation d'assurance maladie.",s:'Décret 2-21-928, art. 4 ; CGI, art. 42 ter-II-B'},
+{id:'csp',ok:1,t:"Paiement de la cotisation : avec ton option de déclaration. Option mensuelle : avant la fin du mois qui suit le mois d'encaissement. Option trimestrielle : avant la fin du mois qui suit le trimestre. Elle est payée à l'organisme du registre (ae.gov.ma), qui la reverse à la CNSS.",s:'Décret 2-21-928, art. 5 et 8'},
+{id:'csr',ok:1,t:"Régularisation annuelle : avant la dernière déclaration de l'année, tu régularises le droit complémentaire réellement dû pour l'année, en tenant compte des montants déjà payés.",s:'Décret 2-21-928, art. 6 ; CGI, art. 82 bis'},
+{id:'imm',ok:1,t:"Date d'effet de l'immatriculation à la sécurité sociale : le premier jour du mois qui suit celui où tu dois présenter ta première déclaration de chiffre d'affaires.",s:'Décret 2-21-928, art. 2 (modifié par 2-22-208)'},
+{id:'csm',ok:0,t:"Retard de versement de la cotisation d'assurance maladie : majoration de 1 % par mois de retard, dans la limite d'un mois de cotisation par an. Les modalités pour l'auto-entrepreneur sont fixées par un arrêté du ministère du Budget, que l'appli n'a pas.",s:'Loi 98-15, art. 27 ; décret 2-21-928, art. 7 ; arrêté à obtenir'},
 {id:'ice',ok:0,t:"ICE exigé sur tes factures : bonne pratique, mais l'obligation exacte pour un auto-entrepreneur n'est pas confirmée par les textes fournis.",s:'À vérifier'},
 {id:'cum',ok:0,t:"Cumul de plusieurs catégories d'activités (services et commerce) : plafonds à appliquer séparément ou ensemble ? Non précisé dans les textes fournis. L'appli suit chaque catégorie séparément.",s:'À vérifier'}
 ];
