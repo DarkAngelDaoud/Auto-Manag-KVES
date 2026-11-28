@@ -34,6 +34,7 @@ trad(m){const all=trRows(),bad=all.filter(x=>x.fl.length);let only=false,q='',li
   $('#trl').innerHTML=l.slice(0,lim).map(x=>`<div class="card"><b class="u14">${esc(x.k)}</b><div>FR · ${esc(x.fr)}</div><div>EN · ${esc(x.en)}</div><div dir="rtl" lang="ar">${esc(x.ar)}</div>${x.fl.length?`<div class="note warn">${esc(x.fl.join(', '))}</div>`:''}</div>`).join('')||`<p class="mute">${t('tr.none')}</p>`;$('#trm').hidden=l.length<=lim};
  $('#tro').onchange=e=>{only=e.target.checked;lim=60;draw()};$('#trq').oninput=e=>{q=e.target.value.trim();lim=60;draw()};$('#trm').onclick=()=>{lim+=60;draw()};
  $('#trx').onclick=()=>saveFile('auto-manag-kves-traductions-'+localIso()+'.csv','text/csv;charset=utf-8',trCsv(all));draw()},
+ lgw(m){legalPage(m,'lgw')},lgp(m){legalPage(m,'lgp')},lgc(m){legalPage(m,'lgc')},
  sgn(m){m.innerHTML=`${backBtn(t('back'))}<h1>${t('more.sgn')}</h1><div class="note">${t('sg.hint')}</div><div class="card"><div id="sgs" role="status"></div><div id="sgf" class="mute"></div><button id="sgr">${t('sg.run')}</button></div><div class="card" id="sgl" hidden></div>`;wireBack(toPlus);
  const run=async()=>{const b=$('#sgr');busy(b,true);$('#sgs').className='mute';$('#sgs').textContent=t('sg.running');let r;try{r=await sigCheck(sigLocal)}catch{r={state:'badsig',items:[],bad:0,fp:'',v:'',date:''}}busy(b,false);sigRes=r;
   const msg={none:t('sg.none'),unsupported:t('sg.old'),missing:t('sg.missing'),badsig:t('sg.badsig'),tampered:t('sg.tamper',r.bad),ok:t('sg.ok',r.v,r.date,r.items.length)}[r.state];

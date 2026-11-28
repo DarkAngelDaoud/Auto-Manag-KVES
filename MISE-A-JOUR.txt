@@ -1,6 +1,7 @@
 Auto Manag KVES · signé KVES · historique des versions
 (Procédure : une modification par version. Mettre à jour le numéro dans donnees.js, sw.js, version.json et index.html, ajouter une ligne ici, puis déposer les fichiers dans le dépôt.)
 
+V2.1.1  Carte Légal : avertissement, politique de confidentialité, conditions d'utilisation (fr, en, ar)
 V2.1.0  Page Plus en cartes (comme Coach-Mass-KVES) et carte À propos (bannière, logo, signature vérifiée, empreinte, version)
 V2.0.1  Signature alignée sur Coach-Mass-KVES (Ed25519, outil privé SIGNER-KVES-AutoManag.html, clé publique kves-automanag-cle-publique.txt)
 V2.0.0  Signature cryptographique des fichiers (écran Vérifier l'application)

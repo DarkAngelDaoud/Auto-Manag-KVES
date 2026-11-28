@@ -137,3 +137,8 @@ nav button[aria-current=page] svg{background:var(--tint)}
 .pcard button.sec{border:0;color:var(--text);background:color-mix(in srgb,var(--pri) 10%,var(--card))}
 .pbanner{display:block;width:100%;height:auto;border-radius:16px}.pcard .logobox{align-self:stretch;box-shadow:none;text-align:center}.pcard .logobox img{margin:0 auto;max-width:100%}
 .psig{font-weight:700;font-size:15px}.psig.ok{color:var(--ok)}.psig.warn{color:var(--warn)}.psig.bad{color:var(--bad)}
+
+/* V2.1.1 : carte Légal (liste avec flèches) et pages de texte */
+.pcard button.prow{display:flex;justify-content:space-between;align-items:center;min-height:56px;border-radius:0;background:none;color:var(--text);font-weight:500;font-size:17px;padding:0 4px;border-top:1px solid var(--line)}
+.chev{font-size:24px;color:var(--mute);line-height:1}:root[dir=rtl] .chev{display:inline-block;transform:scaleX(-1)}
+.lgcard{gap:6px;padding:20px;border-radius:24px}.lgh{margin:14px 0 0;font-size:17px;color:var(--text);font-weight:700}.lgh:first-child{margin-top:0}.lgp{font-size:15px;line-height:1.6;color:var(--mute);overflow-wrap:anywhere}
