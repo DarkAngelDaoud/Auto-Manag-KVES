@@ -6,7 +6,7 @@ The pocket manager for Moroccan auto-entrepreneurs: clients, PDF invoices, recei
 
 Version 2.0.1 · © KVES · Installable web app (PWA) · All your data stays on your phone
 
-**README languages:** [Français](README.md) · English
+**README languages:** [Français](README.md) · English · [العربية](README.ar.md) · [Darija](README.darija.md)
 
 <p align="center"><img src="docs/captures.jpg" alt="Home, invoices, deadlines and simulator" width="100%"></p>
 <p align="center"><i>Screenshots taken with sample data. The app itself is in French, English and Arabic; the screens shown are in French.</i></p>
@@ -158,7 +158,7 @@ Full history: [MISE-A-JOUR.txt](MISE-A-JOUR.txt) (French).
 ## Roadmap
 
 - Android version (APK) for stronger protection of the app.
-- Review of the translations (Arabic, English) and README in Arabic and Moroccan Darija.
+- Review by native speakers of the app translations (Arabic, English) and of the Arabic and Moroccan Darija READMEs.
 - Confirmation of the legal points listed above.
 
 ---

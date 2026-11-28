@@ -6,7 +6,7 @@ Le gestionnaire de poche de l'auto-entrepreneur marocain : clients, factures PDF
 
 Version 2.0.1 · © KVES · Application web installable (PWA) · Toutes tes données restent sur ton téléphone
 
-**Langues du README :** Français · [English](README.en.md)
+**Langues du README :** Français · [English](README.en.md) · [العربية](README.ar.md) · [Darija](README.darija.md)
 
 <p align="center"><img src="docs/captures.jpg" alt="Accueil, factures, échéances et simulateur" width="100%"></p>
 <p align="center"><i>Captures réalisées avec des données de démonstration.</i></p>
@@ -158,7 +158,7 @@ Historique complet : [MISE-A-JOUR.txt](MISE-A-JOUR.txt).
 ## Feuille de route
 
 - Version Android (APK) pour une protection de l'application plus forte.
-- Relecture des traductions (arabe, anglais) et README en arabe et en darija.
+- Relecture par une personne de langue maternelle des traductions de l'application (arabe, anglais) et des README en arabe et en darija.
 - Confirmation des points légaux listés ci-dessus.
 
 ---
