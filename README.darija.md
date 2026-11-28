@@ -4,7 +4,7 @@
 
 L-application dyal jib l-moqawil dhati (auto-entrepreneur) f l-Maghrib: l-clients, l-factures PDF, l-flous li dkhlo, l-masarif, d-déclarations w simulateur dyal l-impôt. **Bla internet**, **mchaffra** w **bla compte**.
 
-Version 2.1.1 · © KVES · Application web li kat t-installa (PWA) · Kol l-données dyalek kat-bqa f telephone dyalek
+Version 2.1.2 · © KVES · Application web li kat t-installa (PWA) · Kol l-données dyalek kat-bqa f telephone dyalek
 
 **Lghat dyal had l-README:** [Français](README.md) · [English](README.en.md) · [العربية](README.ar.md) · Darija
 

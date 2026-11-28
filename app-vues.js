@@ -68,6 +68,7 @@ function more(m){if(route.sub)return subs[route.sub](m);
  <div class="card pcard"><b class="ph">${t('pl.g4')}</b><p class="pd">${t('pl.g4d')}</p>${['aff','sec','sav'].map(k=>`<button class="sec" data-s="${k}">${t('more.'+k)}</button>`).join('')}<button class="sec" id="lk">${t('lock.now2')}</button></div>
  ${card(t('more.demo'),t('pl.demod'),['demo'])}
  <div class="card pcard"><b class="ph">${t('pl.about')}</b><img class="pbanner" src="banniere.jpg" alt="Auto Manag KVES" width="960" height="300"><div class="logobox"><img src="logo-kves.png" alt="KVES Services & Tech"></div><p class="pd">${t('pl.by')}</p><p class="psig mute" id="abs">…</p><p class="pd" id="abf"></p><p class="pd">${t('pl.ver',APP_VERSION)}</p><button class="sec" data-s="sgn">${t('more.sgn')}</button></div>
+ <div class="card pcard"><b class="ph">${t('pl.share')}</b><button class="prow" data-s="shr">${t('shr.row')}<span class="chev">›</span></button></div>
  <div class="card pcard"><b class="ph">${t('pl.legal')}</b>${['lgw','lgp','lgc'].map(k=>`<button class="prow" data-s="${k}">${t(k+'.t')}<span class="chev">›</span></button>`).join('')}</div>`;
  if(upd.p)$('#upl').onclick=()=>updStep(2);m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>nav('more',b.dataset.s));$('#lk').onclick=lock;
  (sigRes?Promise.resolve(sigRes):sigCheck(sigLocal).then(r=>(sigRes=r))).catch(()=>({state:'badsig',fp:''})).then(r=>{const e=$('#abs');if(!e||route.tab!=='more'||route.sub)return;const s=sigLine(r);e.className='psig '+s.k;e.textContent=s.x;$('#abf').textContent=s.fp})}

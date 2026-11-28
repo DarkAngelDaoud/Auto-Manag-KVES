@@ -4,7 +4,7 @@
 
 The pocket manager for Moroccan auto-entrepreneurs: clients, PDF invoices, receipts, expenses, tax declarations and a tax simulator, **offline**, **encrypted** and **with no account**.
 
-Version 2.1.1 · © KVES · Installable web app (PWA) · All your data stays on your phone
+Version 2.1.2 · © KVES · Installable web app (PWA) · All your data stays on your phone
 
 **README languages:** [Français](README.md) · English · [العربية](README.ar.md) · [Darija](README.darija.md)
 
