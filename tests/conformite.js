@@ -1,5 +1,5 @@
 // Tests V1.7.0 : alertes de radiation et références légales. Lancés par run.js
-const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};
+const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};const until=require('./attendre.js');
 const PW='Phrase-test-2026!';
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},timezoneId:'Africa/Casablanca'});const P=await ctx.newPage();const errs=[];P.on('pageerror',e=>errs.push(e.message));
 await P.clock.setFixedTime(new Date('2026-12-10T10:00:00'));
@@ -33,10 +33,10 @@ await P.evaluate(()=>nav('more','regles'));await P.waitForSelector('#ai');
 const nOk=await P.evaluate(()=>REGLES.filter(r=>r.ok).length),nChk=await P.evaluate(()=>REGLES.filter(r=>!r.ok).length);
 T('toutes les règles sont affichées',(await P.locator('#m .card').count())===nOk+nChk+1);
 T('cases « Je l\'ai vérifié » seulement sur les règles à vérifier',(await P.locator('[data-r]').count())===nChk);
-await P.locator('[data-r]').first().check();await P.waitForFunction(()=>Object.values(db.verifie).some(Boolean));
+await P.locator('[data-r]').first().check();await until(P,()=>Object.values(db.verifie).some(Boolean));
 T('vérification enregistrée avec la date',await P.evaluate(()=>/^2026-12-10/.test(Object.values(db.verifie).find(Boolean))));
-await P.waitForSelector('[data-r]:checked');await P.locator('[data-r]:checked').first().uncheck();await P.waitForFunction(()=>!Object.values(db.verifie).some(Boolean));T('case décochable',true);
-await P.waitForTimeout(700);await P.fill('#ai','2024');await P.dispatchEvent('#ai','change');await P.waitForFunction(()=>db.params.anneeInscription===2024);T('année d\'inscription enregistrée',true);
+await P.waitForSelector('[data-r]:checked');await P.locator('[data-r]:checked').first().uncheck();await until(P,()=>!Object.values(db.verifie).some(Boolean));T('case décochable',true);
+await P.waitForTimeout(700);await P.fill('#ai','2024');await P.dispatchEvent('#ai','change');await until(P,()=>db.params.anneeInscription===2024);T('année d\'inscription enregistrée',true);
 T('valeurs de l\'appli affichées (plafond 200 000 DH)',(await P.textContent('#m')).replace(/\s/g,' ').match(/200\D?000 DH/)!==null);
 // 5. ancien coffre : verifie ajouté par norm
 T('coffre ancien : clé verifie présente par défaut',await P.evaluate(()=>typeof norm({v:2,params:db.params}).verifie==='object'));

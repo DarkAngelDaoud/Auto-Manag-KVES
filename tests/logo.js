@@ -1,5 +1,5 @@
 // Tests V1.6.2 : logo, couleur, modèle de facture. Lancés par run.js
-const {chromium}=require('playwright');const fs=require('fs'),os=require('os'),path=require('path'),cp=require('child_process');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};
+const {chromium}=require('playwright');const fs=require('fs'),os=require('os'),path=require('path'),cp=require('child_process');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};const until=require('./attendre.js');
 const PW='Phrase-test-2026!';const OUT=process.env.PDF_OUT||os.tmpdir();
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},timezoneId:'Africa/Casablanca',acceptDownloads:true});const P=await ctx.newPage();const errs=[];P.on('pageerror',e=>errs.push(e.message));
 await P.goto(BASE+'index.html');await P.fill('#pw',PW);await P.fill('#pw2',PW);await P.click('#go');await P.waitForSelector('#rk');await P.check('#ok');await P.click('#next');await P.waitForSelector('nav');
@@ -12,7 +12,7 @@ T('logo enregistré, réduit à 480 px max et converti en JPEG',lg1.id&&lg1.w===
 T('les champs de l\'entreprise sont conservés',await P.evaluate(()=>db.entreprise.nom==='Ernest Vondo'));
 // enregistrer le formulaire ne perd pas le logo ni la couleur
 await P.click('.sw[data-c="vert"]');await P.waitForSelector('.sw[data-c="vert"][aria-pressed="true"]');
-await P.click('#sv');await P.waitForFunction(()=>!document.querySelector('#sv'));T('enregistrer « Mon entreprise » conserve logo et couleur',await P.evaluate(()=>!!db.entreprise.logoId&&db.entreprise.couleur==='vert'));
+await P.click('#sv');await until(P,()=>!document.querySelector('#sv'));T('enregistrer « Mon entreprise » conserve logo et couleur',await P.evaluate(()=>!!db.entreprise.logoId&&db.entreprise.couleur==='vert'));
 // fichier invalide
 await P.evaluate(()=>nav('more','ent'));await P.waitForSelector('#lgf');await P.setInputFiles('#lgf',{name:'x.png',mimeType:'image/png',buffer:Buffer.from('pas une image')});await P.waitForSelector('#lgerr:not([hidden])');T('fichier non image refusé',await P.evaluate(()=>!!db.entreprise.logoId));
 // factures émises : f1 (logo + vert), f2 annulée ; puis changement de logo
@@ -32,11 +32,11 @@ const imgs=cp.spawnSync('pdfimages',['-list',f1]).stdout.toString();T('PDF : pdf
 await P.evaluate(()=>nav('inv','fiche','f2'));await P.waitForSelector('#fpdf');const [d2]=await Promise.all([P.waitForEvent('download'),P.click('#fpdf')]);const f2=path.join(OUT,'facture-annulee.pdf');await d2.saveAs(f2);
 T('PDF annulée : mention ANNULÉE',cp.spawnSync('pdftotext',[f2,'-']).stdout.toString().includes('ANNUL'));
 // changer de logo : la facture émise garde l'ancien
-await P.evaluate(()=>nav('more','ent'));await P.waitForSelector('#lgf');await P.setInputFiles('#lgf',{name:'l2.png',mimeType:'image/png',buffer:await png(200,100,'#2c3e50')});await P.waitForFunction(id=>db.entreprise.logoId!==id,old);
+await P.evaluate(()=>nav('more','ent'));await P.waitForSelector('#lgf');await P.setInputFiles('#lgf',{name:'l2.png',mimeType:'image/png',buffer:await png(200,100,'#2c3e50')});await until(P,id=>db.entreprise.logoId!==id,old);
 T('l\'ancien logo reste disponible pour la facture émise',await P.evaluate(([o])=>!!db.logos[o]&&db.documents.find(d=>d.id==='f1').ent.logoId===o,[old]));
 T('le nouveau logo (petit) n\'est pas agrandi',await P.evaluate(()=>{const l=db.logos[db.entreprise.logoId];return l.w===200&&l.h===100}));
 // retirer le logo : l'ancien, utilisé par f1, est conservé ; le nouveau, non utilisé, est supprimé
-const nw=await P.evaluate(()=>db.entreprise.logoId);await P.click('#lgx');await P.waitForFunction(()=>!db.entreprise.logoId);
+const nw=await P.evaluate(()=>db.entreprise.logoId);await P.click('#lgx');await until(P,()=>!db.entreprise.logoId);
 T('retrait : logo inutilisé supprimé, logo d\'une facture émise conservé',await P.evaluate(([o,n])=>!db.logos[n]&&!!db.logos[o],[old,nw]));
 // persistance chiffrée : recharger et déverrouiller
 await P.reload();await P.waitForSelector('#upw');await P.fill('#upw',PW);await P.click('#ugo');await P.waitForSelector('nav');

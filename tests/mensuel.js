@@ -1,5 +1,5 @@
 // Tests V1.7.1 : déclaration mensuelle. Lancés par run.js
-const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};
+const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};const until=require('./attendre.js');
 const PW='Phrase-test-2026!';
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},timezoneId:'Africa/Casablanca'});const P=await ctx.newPage();const errs=[];P.on('pageerror',e=>errs.push(e.message));
 await P.goto(BASE+'index.html');await P.fill('#pw',PW);await P.fill('#pw2',PW);await P.click('#go');await P.waitForSelector('#rk');await P.check('#ok');await P.click('#next');await P.waitForSelector('nav');
@@ -34,13 +34,13 @@ await P.evaluate(()=>{route.xy=2026;nav('more','decl')});await P.waitForSelector
 T('formulaire de déclaration d\'avril : titre du mois et impôt 50,00 DH',await P.evaluate(()=>{const x=document.querySelector('#m').textContent.replace(/\s/g,' ');return x.includes('Avril 2026')&&/50,00/.test(x)}));
 await P.evaluate(()=>{document.querySelector('#x_d').value='2026-04-29'});await P.click('#sv');
 T('date avant la fin du mois refusée',await P.evaluate(()=>!decl(2026,'M04')));
-await P.evaluate(()=>{document.querySelector('#x_d').value='2026-05-20'});await P.click('#sv');await P.waitForFunction(()=>decl(2026,'M04'));T('déclaration d\'avril enregistrée (M04)',true);
+await P.evaluate(()=>{document.querySelector('#x_d').value='2026-05-20'});await P.click('#sv');await until(P,()=>decl(2026,'M04'));T('déclaration d\'avril enregistrée (M04)',true);
 await P.waitForSelector('[data-a=fiche]');await P.evaluate(()=>nav('more','declfiche',{annee:2026,t:'M04'}));await P.waitForSelector('.invoice');const rc=await P.textContent('.invoice');
 T('récapitulatif mensuel : mois en français et montants',rc.includes('Avril 2026')&&/5\D?000,00/.test(rc));
 // accueil et échéances
 await P.evaluate(()=>nav('home'));T('accueil sans erreur en mensuel',(await P.textContent('#m')).length>50);
 await P.evaluate(()=>nav('more','loi'));await P.waitForSelector('#p_per');T('réglage visible et sur « Mensuelle »',(await P.inputValue('#p_per'))==='M');
-await P.selectOption('#p_per','T');await P.click('#ps');await P.waitForFunction(()=>db.params.periodicite==='T');T('retour en trimestrielle enregistré',true);
+await P.selectOption('#p_per','T');await P.click('#ps');await until(P,()=>db.params.periodicite==='T');T('retour en trimestrielle enregistré',true);
 await P.evaluate(()=>nav('ech'));T('écran Échéances en trimestriel : 4 lignes',await P.evaluate(()=>document.querySelectorAll('#m .card .row').length===4));
 T('aucune erreur JS',errs.length===0);
 console.log(ok+' OK, '+ko+' échecs');await b.close();process.exit(ko?1:0)})();

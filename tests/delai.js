@@ -1,9 +1,9 @@
 // Tests V1.8.1 : délai après échecs, anti-cadre, rappel iPhone
-const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};const PW='Phrase-test-2026!';
+const {chromium}=require('playwright');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};const PW='Phrase-test-2026!';const until=require('./attendre.js');
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});const P=await ctx.newPage();const errs=[];P.on('pageerror',e=>errs.push(e.message));
 await P.goto(BASE+'index.html');await P.fill('#pw',PW);await P.fill('#pw2',PW);await P.click('#go');await P.waitForSelector('#rk');await P.check('#ok');await P.click('#next');await P.waitForSelector('nav');
 await P.reload();await P.waitForSelector('#upw');
-for(let i=0;i<5;i++){await P.fill('#upw','mauvais-mot-de-passe-'+i);await P.click('#ugo');await P.waitForFunction(()=>!document.querySelector('#ugo')||!document.querySelector('#ugo').disabled);await P.waitForTimeout(150)}
+for(let i=0;i<5;i++){await P.fill('#upw','mauvais-mot-de-passe-'+i);await P.click('#ugo');await until(P,()=>!document.querySelector('#ugo')||!document.querySelector('#ugo').disabled);await P.waitForTimeout(150)}
 T('5 échecs enregistrés',await P.evaluate(()=>JSON.parse(localStorage.getItem('amk.fail')).n===5));
 T('délai posé après 5 échecs',await P.evaluate(()=>failWait()>0&&failWait()<=30));
 await P.fill('#upw',PW);await P.click('#ugo');await P.waitForTimeout(600);

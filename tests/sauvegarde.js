@@ -1,10 +1,10 @@
 // Tests V1.6.0 : sauvegarde vérifiable. Lancés par run.js
-const {chromium}=require('playwright');const fs=require('fs');const os=require('os');const path=require('path');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};
+const {chromium}=require('playwright');const fs=require('fs');const os=require('os');const path=require('path');const BASE=process.env.BASE_LOCAL;let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};const until=require('./attendre.js');
 const PW='Phrase-test-2026!';
 (async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},timezoneId:'Africa/Casablanca'});const P=await ctx.newPage();const errs=[];P.on('pageerror',e=>errs.push(e.message));
 await P.goto(BASE+'index.html');await P.fill('#pw',PW);await P.fill('#pw2',PW);await P.click('#go');await P.waitForSelector('#rk');const RK=(await P.textContent('#rk')).trim();await P.check('#ok');await P.click('#next');await P.waitForSelector('nav');
 await P.evaluate(async()=>{db.clients.push({id:'c1',nom:'A',cree:nowIso()},{id:'c2',nom:'B',cree:nowIso()});await persist();nav('more','sav')});
-await P.waitForSelector('#ex');await P.click('#ex');await P.waitForFunction(()=>document.querySelector('#outta').value.length>50);
+await P.waitForSelector('#ex');await P.click('#ex');await until(P,()=>document.querySelector('#outta').value.length>50);
 const bk=await P.inputValue('#outta');const fname=await P.getAttribute('#dla','download');
 T('nom de fichier clair AutoManagKVES_date_heure.kves',/^AutoManagKVES_\d{4}-\d{2}-\d{2}_\d{2}h\d{2}\.kves$/.test(fname));
 T('rappel de tester la sauvegarde affiché',(await P.textContent('#out')).includes('Vérifier une sauvegarde'));

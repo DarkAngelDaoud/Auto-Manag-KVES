@@ -1,6 +1,6 @@
 // Tests V2.0.1 : signature Ed25519 comme Coach-Mass-KVES (outils de contrôle, outil privé HTML, vérification dans l'appli, refus de mise à jour)
 // L'outil privé SIGNER-KVES-AutoManag.html n'est pas dans le dépôt : indiquer son chemin avec KVES_OUTIL (sinon ces tests-là sont ignorés).
-const {chromium}=require('playwright');const fs=require('fs'),os=require('os'),path=require('path'),http=require('http'),cp=require('child_process'),crypto=require('crypto');
+const {chromium}=require('playwright');const fs=require('fs'),os=require('os'),path=require('path'),http=require('http'),cp=require('child_process'),crypto=require('crypto');const until=require('./attendre.js');
 const SRC=path.resolve(__dirname,'..');let ok=0,ko=0;const T=(n,c)=>{console.log(c?'OK  ':'FAIL',n);c?ok++:ko++};const PW='Phrase-test-2026!';
 const TOOL=process.env.KVES_OUTIL||path.resolve(SRC,'..','OUTIL-PRIVE','SIGNER-KVES-AutoManag.html');const hasTool=fs.existsSync(TOOL);
 const C=require(path.join(SRC,'outils','commun.js'));
@@ -39,7 +39,7 @@ if(hasTool){
  await P.goto('file://'+TOOL);
  await P.fill('#p1','court');await P.fill('#p2','court');await P.click('#gen');T('outil : phrase trop courte refusée',/10 caract/.test(await P.textContent('#mg')));
  await P.fill('#p1','Phrase-secrete-A1');await P.fill('#p2','autre-phrase-xx');await P.click('#gen');T('outil : deux phrases différentes refusées',/ne correspondent pas/.test(await P.textContent('#mg'))&&got.length===0);
- await P.fill('#p2','Phrase-secrete-A1');await P.click('#gen');await P.waitForFunction(()=>/Empreinte/.test(document.querySelector('#mg').textContent),null,{timeout:20000});await P.waitForTimeout(900);
+ await P.fill('#p2','Phrase-secrete-A1');await P.click('#gen');await until(P,()=>/Empreinte/.test(document.querySelector('#mg').textContent),null,{timeout:20000});await P.waitForTimeout(900);
  const kjson=path.join(dir,'KVES-AutoManag-cle-privee-CHIFFREE.json'),kpub=path.join(dir,'kves-automanag-cle-publique.txt');
  T('outil : crée la clé privée chiffrée et la clé publique, avec des noms propres à Auto Manag',got.includes('KVES-AutoManag-cle-privee-CHIFFREE.json')&&got.includes('kves-automanag-cle-publique.txt'));
  const kobj=JSON.parse(fs.readFileSync(kjson,'utf8'));
@@ -49,16 +49,16 @@ if(hasTool){
  fs.writeFileSync(path.join(B,'kves-automanag-cle-publique.txt'),pubTxt);
  const tx=path.join(B,'SIGNATURE-KVES.txt');
  await P.setInputFiles('#kf',kjson);await P.setInputFiles('#tf',tx);
- got.length=0;await P.fill('#sp','mauvaise-phrase-xx');await P.click('#sig');await P.waitForFunction(()=>document.querySelector('#ms').textContent.length>0,null,{timeout:20000});await P.waitForTimeout(500);
+ got.length=0;await P.fill('#sp','mauvaise-phrase-xx');await P.click('#sig');await until(P,()=>document.querySelector('#ms').textContent.length>0,null,{timeout:20000});await P.waitForTimeout(500);
  T('outil : mauvaise phrase secrète refusée, aucun fichier créé',/Échec/.test(await P.textContent('#ms'))&&got.length===0);
- await P.fill('#sp','Phrase-secrete-A1');await P.click('#sig');await P.waitForFunction(()=>/Signature créée/.test(document.querySelector('#ms').textContent),null,{timeout:20000});await P.waitForTimeout(600);
+ await P.fill('#sp','Phrase-secrete-A1');await P.click('#sig');await until(P,()=>/Signature créée/.test(document.querySelector('#ms').textContent),null,{timeout:20000});await P.waitForTimeout(600);
  T('outil : signe la liste de la version et indique le numéro de version',got.includes('SIGNATURE-KVES.sig')&&new RegExp('version '+C.version().replace(/\./g,'\\.')).test(await P.textContent('#ms')));
  fs.copyFileSync(path.join(dir,'SIGNATURE-KVES.sig'),path.join(B,'SIGNATURE-KVES.sig'));
  T("la signature faite par l'outil est acceptée par verifier.js (Node)",node(B,'verifier.js').code===0);
  // garde-fous
  const bad1=JSON.parse(JSON.stringify(kobj));delete bad1.app;fs.writeFileSync(path.join(dir,'coach.json'),JSON.stringify(bad1));
- got.length=0;await P.setInputFiles('#kf',path.join(dir,'coach.json'));await P.fill('#sp','Phrase-secrete-A1');await P.click('#sig');await P.waitForFunction(()=>/pas la clé/.test(document.querySelector('#ms').textContent),null,{timeout:20000});T("outil : refuse la clé d'une autre application (Coach-Mass)",got.length===0);
- fs.writeFileSync(path.join(dir,'autre.txt'),man.replace('Auto Manag KVES','Coach-Mass-KVES'));await P.setInputFiles('#kf',kjson);await P.setInputFiles('#tf',path.join(dir,'autre.txt'));await P.click('#sig');await P.waitForFunction(()=>/pas le SIGNATURE/.test(document.querySelector('#ms').textContent),null,{timeout:20000});T("outil : refuse la liste d'une autre application",got.length===0);
+ got.length=0;await P.setInputFiles('#kf',path.join(dir,'coach.json'));await P.fill('#sp','Phrase-secrete-A1');await P.click('#sig');await until(P,()=>/pas la clé/.test(document.querySelector('#ms').textContent),null,{timeout:20000});T("outil : refuse la clé d'une autre application (Coach-Mass)",got.length===0);
+ fs.writeFileSync(path.join(dir,'autre.txt'),man.replace('Auto Manag KVES','Coach-Mass-KVES'));await P.setInputFiles('#kf',kjson);await P.setInputFiles('#tf',path.join(dir,'autre.txt'));await P.click('#sig');await until(P,()=>/pas le SIGNATURE/.test(document.querySelector('#ms').textContent),null,{timeout:20000});T("outil : refuse la liste d'une autre application",got.length===0);
  await ctx.close();D=B;
 }else console.log('SKIP outil privé HTML introuvable (KVES_OUTIL) : 14 contrôles ignorés ; la signature de test est faite avec Node');
 // --- 3. l'application
@@ -66,7 +66,7 @@ const keyApp=hasTool?null:K1;if(!hasTool)D=A;
 const setup=async P=>{await P.goto(P.__u+'index.html');await P.fill('#pw',PW);await P.fill('#pw2',PW);await P.click('#go');await P.waitForSelector('#rk');await P.check('#ok');await P.click('#next');await P.waitForSelector('nav')};
 const errs=[];
 {const srv=await serve(D);const P=await(await b.newContext({viewport:{width:390,height:844}})).newPage();P.__u=srv.url;P.on('pageerror',e=>errs.push(e.message));await setup(P);
- await P.evaluate(()=>nav('more','sgn'));await P.waitForFunction(()=>/Signature valide/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:15000}).catch(()=>{});
+ await P.evaluate(()=>nav('more','sgn'));await until(P,()=>/Signature valide/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:15000}).catch(()=>{});
  T('app signée : « Signature valide »',/Signature valide/.test(await P.textContent('#sgs')));
  {const d=await P.evaluate(()=>[...document.querySelectorAll('#sgl .row')].map(r=>r.textContent));console.log('  fichiers vérifiés :',d.length,d.filter(x=>x.includes('✗')));T('tous les fichiers cochés ✓',d.length>=24&&d.every(x=>x.endsWith('✓')))}
  const fpTxt=await P.textContent('#sgf');T("l'empreinte affichée dans l'appli est celle de la clé publique en ligne",fpTxt.includes(C.fingerprint(Buffer.from(rd(D,'kves-automanag-cle-publique.txt'),'base64url'))));
@@ -91,19 +91,19 @@ const errs=[];
  T('mise à jour signée par une AUTRE clé (clé publique remplacée) : refusée',r.otherKey===false);T('mise à jour sans clé publique : refusée',r.noKey===false);
  T('navigateur trop ancien : « vérification impossible » et mise à jour non bloquée',r.oldState==='unsupported'&&r.oldUpd===true);
  // message d'écran pour un navigateur trop ancien
- await P.evaluate(()=>{const o=crypto.subtle.importKey.bind(crypto.subtle);window.__o=o;crypto.subtle.importKey=(f,k,a,...x)=>a&&a.name==='Ed25519'?Promise.reject(new Error('x')):o(f,k,a,...x);nav('more','sgn')});await P.waitForFunction(()=>/trop ancien/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:15000}).catch(()=>{});
+ await P.evaluate(()=>{const o=crypto.subtle.importKey.bind(crypto.subtle);window.__o=o;crypto.subtle.importKey=(f,k,a,...x)=>a&&a.name==='Ed25519'?Promise.reject(new Error('x')):o(f,k,a,...x);nav('more','sgn')});await until(P,()=>/trop ancien/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:15000}).catch(()=>{});
  T('écran Vérifier l\'application : message « trop ancien » (pas d\'alarme rouge)',/trop ancien/.test(await P.textContent('#sgs'))&&/warn/.test(await P.getAttribute('#sgs','class')));
  srv.close()}
 {const X=copy();fs.cpSync(D,X,{recursive:true,filter:s=>!/tests/.test(s)});fs.appendFileSync(path.join(X,'app-vues.js'),'\n// modifié après signature\n');const srv=await serve(X);const P=await(await b.newContext({viewport:{width:390,height:844}})).newPage();P.__u=srv.url;P.on('pageerror',e=>errs.push(e.message));await setup(P);
  await P.waitForTimeout(1500);await P.evaluate(()=>nav('home'));await P.waitForTimeout(400);T("fichier modifié : alerte sur l'accueil",(await P.textContent('#m')).includes('Contrôle de signature'));
- await P.evaluate(()=>nav('more','sgn'));await P.waitForFunction(()=>/ne correspondent pas/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:15000}).catch(()=>{});
+ await P.evaluate(()=>nav('more','sgn'));await until(P,()=>/ne correspondent pas/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:15000}).catch(()=>{});
  T('fichier modifié : détecté et nommé (✗ app-vues.js)',await P.evaluate(()=>[...document.querySelectorAll('#sgl .row')].some(r=>r.textContent.includes('app-vues.js')&&r.textContent.includes('✗'))&&/1 fichier/.test(document.querySelector('#sgs').textContent)));
  T('verifier.js détecte aussi la modification',node(X,'verifier.js').code!==0);srv.close()}
 {const X=copy();signNode(X,newKey());fs.writeFileSync(path.join(X,'kves-automanag-cle-publique.txt'),rd(D,'kves-automanag-cle-publique.txt'));const srv=await serve(X);const P=await(await b.newContext({viewport:{width:390,height:844}})).newPage();P.__u=srv.url;P.on('pageerror',e=>errs.push(e.message));await setup(P);
- await P.waitForTimeout(1500);await P.evaluate(()=>nav('more','sgn'));await P.waitForFunction(()=>/INVALIDE/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:15000}).catch(()=>{});
+ await P.waitForTimeout(1500);await P.evaluate(()=>nav('more','sgn'));await until(P,()=>/INVALIDE/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:15000}).catch(()=>{});
  T('signature faite par une autre clé : « Signature INVALIDE »',/INVALIDE/.test(await P.textContent('#sgs')));srv.close()}
 {const X=copy();const srv=await serve(X);const P=await(await b.newContext({viewport:{width:390,height:844}})).newPage();P.__u=srv.url;P.on('pageerror',e=>errs.push(e.message));await setup(P);
- await P.evaluate(()=>nav('more','sgn'));await P.waitForFunction(()=>/non configurée/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:10000}).catch(()=>{});
+ await P.evaluate(()=>nav('more','sgn'));await until(P,()=>/non configurée/.test(document.querySelector('#sgs')?.textContent||''),null,{timeout:10000}).catch(()=>{});
  T('sans clé (A-GENERER) : « Signature non configurée », aucune alerte',/non configurée/.test(await P.textContent('#sgs')));
  T('sans clé : les mises à jour restent possibles',await P.evaluate(()=>updVerify('9.9.9','amk-x')));srv.close()}
 T('aucune erreur JS',errs.length===0);if(errs.length)console.log(errs);
