@@ -129,3 +129,11 @@ nav button[aria-current=page] svg{background:var(--tint)}
 .u22{justify-content:space-between;border-top:1px solid var(--line);border-radius:0;width:100%}
 .u23{text-align:center}
 [hidden]{display:none!important}
+
+/* V2.1.0 : page Plus en cartes (même disposition que Coach-Mass-KVES) */
+.ptitle{position:relative;padding-bottom:14px;margin-bottom:2px;font-size:32px}.ptitle::after{content:"";position:absolute;inset-inline-start:0;bottom:0;width:60px;height:6px;border-radius:3px;background:var(--pri)}
+.pcard{gap:12px;padding:20px;border-radius:24px;box-shadow:var(--sh)}.pcard .ph{font-size:21px;letter-spacing:-.01em;line-height:1.25}.pcard .pd{color:var(--mute);font-size:15px;line-height:1.55;overflow-wrap:anywhere}
+.pcard button{min-height:56px;border-radius:16px;font-size:17px;font-weight:700;width:100%}
+.pcard button.sec{border:0;color:var(--text);background:color-mix(in srgb,var(--pri) 10%,var(--card))}
+.pbanner{display:block;width:100%;height:auto;border-radius:16px}.pcard .logobox{align-self:stretch;box-shadow:none;text-align:center}.pcard .logobox img{margin:0 auto;max-width:100%}
+.psig{font-weight:700;font-size:15px}.psig.ok{color:var(--ok)}.psig.warn{color:var(--warn)}.psig.bad{color:var(--bad)}

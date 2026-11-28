@@ -4,7 +4,7 @@
 
 Le gestionnaire de poche de l'auto-entrepreneur marocain : clients, factures PDF, encaissements, dépenses, déclarations et simulateur d'impôt, **hors ligne**, **chiffré** et **sans compte**.
 
-Version 2.0.1 · © KVES · Application web installable (PWA) · Toutes tes données restent sur ton téléphone
+Version 2.1.0 · © KVES · Application web installable (PWA) · Toutes tes données restent sur ton téléphone
 
 **Langues du README :** Français · [English](README.en.md) · [العربية](README.ar.md) · [Darija](README.darija.md)
 

@@ -59,9 +59,16 @@ ${info?`<div class="card">${info}</div>`:''}<button id="ne">${t('cl.enc')}</butt
  $('#ar').onclick=()=>{const u=c.archive?[]:unpaid('clientId',c.id);u.length?confirmBox(m,t('cl.arch.c',u.length),t('cl.arch.yes'),doArch):doArch()}}
 
 /* ---- Plus ---- */
+function sigLine(r){const k={ok:'ok',none:'warn',unsupported:'warn'}[r.state]||'bad';const x={ok:t('pl.sigok'),none:t('sg.none'),unsupported:t('sg.old'),missing:t('sg.missing'),badsig:t('pl.sigbad'),tampered:t('pl.sigbad')}[r.state];return{k,x,fp:r.fp?t('pl.fp',r.fp):''}}
 function more(m){if(route.sub)return subs[route.sub](m);
- m.innerHTML=`<h1>${t('tab.more')}</h1><div class="card">${['enc','dep','decl','exp','ent','act','aff','loi','sim','trad','regles','sec','sgn','sav','demo'].map(k=>`<button class="link u22" data-s="${k}">${t('more.'+k)}<span>›</span></button>`).join('')}</div>${upd.p?`<button id="upl">${t('more.upd',upd.p.v)}</button>`:''}<button class="sec" id="lk">${t('lock.now2')}</button><p class="mute u23">${t('more.ver',APP_VERSION)}</p>`;
- if(upd.p)$('#upl').onclick=()=>updStep(2);m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>nav('more',b.dataset.s));$('#lk').onclick=lock}
+ const card=(ti,de,ks)=>`<div class="card pcard"><b class="ph">${ti}</b>${de?`<p class="pd">${de}</p>`:''}${ks.map(k=>`<button class="sec" data-s="${k}">${t('more.'+k)}</button>`).join('')}</div>`;
+ m.innerHTML=`<h1 class="ptitle">${t('tab.more')}</h1>${upd.p?`<div class="card pcard"><b class="ph">${t('more.upd',upd.p.v)}</b><button id="upl">${t('more.upd',upd.p.v)}</button></div>`:''}
+ ${card(t('pl.g1'),t('pl.g1d'),['enc','dep','decl','exp'])}${card(t('pl.g2'),t('pl.g2d'),['ent','act'])}${card(t('pl.g3'),t('pl.g3d'),['sim','loi','regles','trad'])}
+ <div class="card pcard"><b class="ph">${t('pl.g4')}</b><p class="pd">${t('pl.g4d')}</p>${['aff','sec','sav'].map(k=>`<button class="sec" data-s="${k}">${t('more.'+k)}</button>`).join('')}<button class="sec" id="lk">${t('lock.now2')}</button></div>
+ ${card(t('more.demo'),t('pl.demod'),['demo'])}
+ <div class="card pcard"><b class="ph">${t('pl.about')}</b><img class="pbanner" src="banniere.jpg" alt="Auto Manag KVES" width="960" height="300"><div class="logobox"><img src="logo-kves.png" alt="KVES Services & Tech"></div><p class="pd">${t('pl.by')}</p><p class="psig mute" id="abs">…</p><p class="pd" id="abf"></p><p class="pd">${t('pl.ver',APP_VERSION)}</p><button class="sec" data-s="sgn">${t('more.sgn')}</button></div>`;
+ if(upd.p)$('#upl').onclick=()=>updStep(2);m.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>nav('more',b.dataset.s));$('#lk').onclick=lock;
+ (sigRes?Promise.resolve(sigRes):sigCheck(sigLocal).then(r=>(sigRes=r))).catch(()=>({state:'badsig',fp:''})).then(r=>{const e=$('#abs');if(!e||route.tab!=='more'||route.sub)return;const s=sigLine(r);e.className='psig '+s.k;e.textContent=s.x;$('#abf').textContent=s.fp})}
 const toPlus=()=>nav('more');
 const retGo=()=>{const r=route.ret||{tab:'more',sub:'enc'};route.ret=null;route.pre=null;nav(r.tab,r.sub,r.arg)};
 const csvCell=v=>{let s=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(s))s="'"+s;return/[;"\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};

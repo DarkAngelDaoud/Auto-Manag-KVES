@@ -1,0 +1,17 @@
+Auto Manag KVES · signé KVES · Signature de l'application (V2.0.1)
+
+Même méthode que Coach-Mass-KVES : clé Ed25519, outil de signature hors ligne dans le navigateur, clé propre à chaque application.
+
+Dans le dépôt (public) :
+  kves-automanag-cle-publique.txt   la clé PUBLIQUE (contient « A-GENERER » tant que la clé n'est pas créée)
+  SIGNATURE-KVES.txt                la liste des empreintes SHA-256 des fichiers de la version (fournie dans le zip)
+  SIGNATURE-KVES.sig                la signature de cette liste (vide dans le zip, tu la crées à chaque version)
+  outils/verifier.js                contrôle (utilisé par la vérification automatique GitHub ; aucun secret)
+  outils/manifeste.js               refait la liste des empreintes après une modification (outil du développeur)
+
+Hors du dépôt, sur ton ordinateur (zip « OUTIL-PRIVE »), à ne JAMAIS envoyer sur GitHub :
+  SIGNER-KVES-AutoManag.html et GUIDE-SIGNATURE-AutoManag.txt (mode d'emploi), ta clé privée chiffrée et ta phrase secrète.
+
+Attention (Windows/Git) : le fichier .gitattributes de ce dossier empêche Git de modifier les fins de ligne. Ne le supprime pas, sinon les empreintes ne correspondraient plus.
+
+Limite à connaître : la signature détecte les modifications, mais une application web ne peut pas, à elle seule, empêcher un pirate qui contrôlerait tout le dépôt de publier du code. Garde la 2FA et la protection de branche. La version Android (APK) apportera une protection plus forte.
